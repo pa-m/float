@@ -4,13 +4,28 @@
 
 package float
 
-// vanillaSum for []float32
-func (F32) vanillaSum(a []float32) float32 {
-	acc := float32(0)
-	for _, v := range a {
-		acc += v
-	}
-	return acc
+// AddTo  for []float32
+func (f32 F32) AddTo(dst, a, b []float32) {
+	f32.vanillaAddTo(dst, a, b)
+
+}
+
+// SubTo  for []float32
+func (f32 F32) SubTo(dst, a, b []float32) {
+	f32.vanillaSubTo(dst, a, b)
+
+}
+
+// MulTo  for []float32
+func (f32 F32) MulTo(dst, a, b []float32) {
+	f32.vanillaMulTo(dst, a, b)
+
+}
+
+// ScaleTo  for []float32
+func (f32 F32) ScaleTo(dst, a []float32, scale float32) {
+	f32.vanillaScaleTo(dst, a, scale)
+
 }
 
 // Sum for []float32
@@ -20,15 +35,6 @@ func (f32 F32) Sum(a []float32) float32 {
 	}
 }
 
-// vanillaDot for []float32
-func (F32) vanillaDot(a, b []float32) float32 {
-	acc := float32(0)
-	for i, v := range a {
-		acc += v * b[i]
-	}
-	return acc
-}
-
 // Dot for []float32
 func (f32 F32) Dot(a, b []float32) float32 {
 	{
@@ -36,13 +42,28 @@ func (f32 F32) Dot(a, b []float32) float32 {
 	}
 }
 
-// vanillaSum for []float64
-func (F64) vanillaSum(a []float64) float64 {
-	acc := float64(0)
-	for _, v := range a {
-		acc += v
-	}
-	return acc
+// AddTo  for []float64
+func (f64 F64) AddTo(dst, a, b []float64) {
+	f64.vanillaAddTo(dst, a, b)
+
+}
+
+// SubTo  for []float64
+func (f64 F64) SubTo(dst, a, b []float64) {
+	f64.vanillaSubTo(dst, a, b)
+
+}
+
+// MulTo  for []float64
+func (f64 F64) MulTo(dst, a, b []float64) {
+	f64.vanillaMulTo(dst, a, b)
+
+}
+
+// ScaleTo  for []float64
+func (f64 F64) ScaleTo(dst, a []float64, scale float64) {
+	f64.vanillaScaleTo(dst, a, scale)
+
 }
 
 // Sum for []float64
@@ -50,15 +71,6 @@ func (f64 F64) Sum(a []float64) float64 {
 	{
 		return f64.vanillaSum(a)
 	}
-}
-
-// vanillaDot for []float64
-func (F64) vanillaDot(a, b []float64) float64 {
-	acc := float64(0)
-	for i, v := range a {
-		acc += v * b[i]
-	}
-	return acc
 }
 
 // Dot for []float64

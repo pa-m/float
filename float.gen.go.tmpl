@@ -176,4 +176,46 @@ func (F{{.bits}}) Reduce(a []float{{.bits}}, f func(carry, item float{{.bits}}) 
 // Square ...
 func (F{{.bits}}) Square(x float{{.bits}}) float{{.bits}} {return x*x}
 
+// vanillaAddTo  for []float{{.bits}}
+func (F{{.bits}}) vanillaAddTo(dst,a,b []float{{.bits}}) {
+	for i:=range dst {
+		dst[i] = a[i]+b[i]
+	}
+}
+// vanillaSubTo  for []float{{.bits}}
+func (F{{.bits}}) vanillaSubTo(dst,a,b []float{{.bits}}) {
+	for i:=range dst {
+		dst[i] = a[i]-b[i]
+	}
+}
+// vanillaMulTo  for []float{{.bits}}
+func (F{{.bits}}) vanillaMulTo(dst,a,b []float{{.bits}}) {
+	for i:=range dst {
+		dst[i] = a[i]*b[i]
+	}
+}
+// vanillaScaleTo  for []float{{.bits}}
+func (F{{.bits}}) vanillaScaleTo(dst,a []float{{.bits}},scale float{{.bits}}) {
+	for i:=range dst {
+		dst[i] = a[i]*scale
+	}
+}
+
+// vanillaSum for []float{{.bits}}
+func (F{{.bits}}) vanillaSum(a []float{{.bits}})float{{.bits}} {
+    acc:=float{{.bits}}(0)
+    for _,v:=range a{
+        acc+=v
+    }
+    return acc
+}
+
+// vanillaDot for []float{{.bits}}
+func (F{{.bits}}) vanillaDot(a, b []float{{.bits}}) float{{.bits}} {
+	acc := float{{.bits}}(0)
+	for i, v := range a {
+		acc += v * b[i]
+	}
+	return acc
+}
 {{end}}

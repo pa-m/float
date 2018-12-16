@@ -11,14 +11,29 @@ import(
 {{end}}
 )
 {{range .In}}
-// vanillaSum for []float{{.bits}}
-func (F{{.bits}}) vanillaSum(a []float{{.bits}})float{{.bits}} {
-    acc:=float{{.bits}}(0)
-    for _,v:=range a{
-        acc+=v
-    }
-    return acc
+
+
+// AddTo  for []float{{.bits}}
+func (f{{.bits}} F{{.bits}}) AddTo(dst,a,b []float{{.bits}}) {
+		 f{{.bits}}.vanillaAddTo(dst,a,b)
+	
 }
+// SubTo  for []float{{.bits}}
+func (f{{.bits}} F{{.bits}}) SubTo(dst,a,b []float{{.bits}}) {
+		 f{{.bits}}.vanillaSubTo(dst,a,b)
+	
+}
+// MulTo  for []float{{.bits}}
+func (f{{.bits}} F{{.bits}}) MulTo(dst,a,b []float{{.bits}}) {
+		 f{{.bits}}.vanillaMulTo(dst,a,b)
+	
+}
+// ScaleTo  for []float{{.bits}}
+func (f{{.bits}} F{{.bits}}) ScaleTo(dst,a []float{{.bits}},scale float{{.bits}}) {
+		 f{{.bits}}.vanillaScaleTo(dst,a,scale)
+	
+}
+
 
 // Sum for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) Sum(a []float{{.bits}}) float{{.bits}} {
@@ -27,14 +42,6 @@ func (f{{.bits}} F{{.bits}}) Sum(a []float{{.bits}}) float{{.bits}} {
 	}
 }
 
-// vanillaDot for []float{{.bits}}
-func (F{{.bits}}) vanillaDot(a,b []float{{.bits}})float{{.bits}} {
-    acc:=float{{.bits}}(0)
-    for i,v:=range a{
-        acc+=v*b[i]
-    }
-    return acc
-}
 
 // Dot for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) Dot(a,b []float{{.bits}}) float{{.bits}} {

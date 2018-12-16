@@ -72,16 +72,37 @@ func ExampleMin{{.bits}}() {
 
 func BenchmarkSum{{.bits}}(b *testing.B) {
 	a := make([]float{{.bits}}, 8760)
-	for i := 0; i < b.N; i++ {
-		f{{.bits}}.Sum(a)
+	
+	for _, f := range []struct {
+		Name string
+		Func func([]float{{.bits}}) float{{.bits}}
+	}{
+		{"vanillaSum", f{{.bits}}.vanillaSum},
+		{"Sum", f{{.bits}}.Sum},
+	} {
+		b.Run(f.Name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				f.Func(a)
+			}
+		})
 	}
 }
 
 
 func BenchmarkDot{{.bits}}(b *testing.B) {
 	a := make([]float{{.bits}}, 8760)
-	for i := 0; i < b.N; i++ {
-		f{{.bits}}.Dot(a,a)
+	for _, f := range []struct {
+		Name string
+		Func func(x,y []float{{.bits}}) float{{.bits}}
+	}{
+		{"vanillaDot", f{{.bits}}.vanillaDot},
+		{"Dot", f{{.bits}}.Dot},
+	} {
+		b.Run(f.Name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				f.Func(a,a)
+			}
+		})
 	}
 }
 {{end}}

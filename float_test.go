@@ -73,15 +73,36 @@ func ExampleMin32() {
 
 func BenchmarkSum32(b *testing.B) {
 	a := make([]float32, 8760)
-	for i := 0; i < b.N; i++ {
-		f32.Sum(a)
+
+	for _, f := range []struct {
+		Name string
+		Func func([]float32) float32
+	}{
+		{"vanillaSum", f32.vanillaSum},
+		{"Sum", f32.Sum},
+	} {
+		b.Run(f.Name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				f.Func(a)
+			}
+		})
 	}
 }
 
 func BenchmarkDot32(b *testing.B) {
 	a := make([]float32, 8760)
-	for i := 0; i < b.N; i++ {
-		f32.Dot(a, a)
+	for _, f := range []struct {
+		Name string
+		Func func(x, y []float32) float32
+	}{
+		{"vanillaDot", f32.vanillaDot},
+		{"Dot", f32.Dot},
+	} {
+		b.Run(f.Name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				f.Func(a, a)
+			}
+		})
 	}
 }
 
@@ -151,14 +172,35 @@ func ExampleMin64() {
 
 func BenchmarkSum64(b *testing.B) {
 	a := make([]float64, 8760)
-	for i := 0; i < b.N; i++ {
-		f64.Sum(a)
+
+	for _, f := range []struct {
+		Name string
+		Func func([]float64) float64
+	}{
+		{"vanillaSum", f64.vanillaSum},
+		{"Sum", f64.Sum},
+	} {
+		b.Run(f.Name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				f.Func(a)
+			}
+		})
 	}
 }
 
 func BenchmarkDot64(b *testing.B) {
 	a := make([]float64, 8760)
-	for i := 0; i < b.N; i++ {
-		f64.Dot(a, a)
+	for _, f := range []struct {
+		Name string
+		Func func(x, y []float64) float64
+	}{
+		{"vanillaDot", f64.vanillaDot},
+		{"Dot", f64.Dot},
+	} {
+		b.Run(f.Name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				f.Func(a, a)
+			}
+		})
 	}
 }

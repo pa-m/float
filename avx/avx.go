@@ -10,7 +10,7 @@ package avx
 #include <stdlib.h>
 #include <immintrin.h> //AVX: -mavx
 
-float avx_sum32(const size_t n, float *x) {
+float avx_float32_sum(const size_t n, float *x) {
     static const size_t single_size = 8;
 	const size_t end = n / single_size;
 	__m256 vz={0};
@@ -25,7 +25,7 @@ float avx_sum32(const size_t n, float *x) {
 	return z[0]+z[1]+z[2]+z[3]+z[4]+z[5]+z[6]+z[7];
 }
 
-float avx_dot32(const size_t n, float *x, float *y)
+float avx_float32_dot(const size_t n, float *x, float *y)
 {
     static const size_t single_size = 8;
     const size_t end = n / single_size;
@@ -43,8 +43,66 @@ float avx_dot32(const size_t n, float *x, float *y)
     return t[0] + t[1] + t[2] + t[3] + t[4] + t[5] + t[6] + t[7];
 }
 
-float avx_sum64(const size_t n, double *x) {
-    static const size_t single_size = 4;
+void avx_float32_addto(const size_t n, float*dst,float *x, float *y){
+    static const size_t single_size = 8;
+    const size_t end = n / single_size;
+    __m256 *vdst = (__m256 *)dst;
+    __m256 *vx = (__m256 *)x;
+    __m256 *vy = (__m256 *)y;
+    for(size_t i=0; i<end; ++i) {
+      vdst[i] = _mm256_add_ps(vx[i], vy[i]);
+    }
+    for(size_t i=end*single_size; i<n; ++i) {
+      dst[i] = x[i]+y[i];
+    }
+}
+
+void avx_float32_subto(const size_t n, float*dst,float *x, float *y){
+    static const size_t single_size = 8;
+    const size_t end = n / single_size;
+    __m256 *vdst = (__m256 *)dst;
+    __m256 *vx = (__m256 *)x;
+    __m256 *vy = (__m256 *)y;
+    for(size_t i=0; i<end; ++i) {
+      vdst[i] = _mm256_sub_ps(vx[i], vy[i]);
+    }
+    for(size_t i=end*single_size; i<n; ++i) {
+      dst[i] = x[i]-y[i];
+    }
+}
+
+void avx_float32_multo(const size_t n, float*dst,float *x, float *y){
+    static const size_t single_size = 8;
+    const size_t end = n / single_size;
+    __m256 *vdst = (__m256 *)dst;
+    __m256 *vx = (__m256 *)x;
+    __m256 *vy = (__m256 *)y;
+    for(size_t i=0; i<end; ++i) {
+      vdst[i] = _mm256_mul_ps(vx[i], vy[i]);
+    }
+    for(size_t i=end*single_size; i<n; ++i) {
+      dst[i] = x[i]*y[i];
+    }
+}
+
+void avx_float32_scaleto(const size_t n, float*dst,float *x, float scale){
+    static const size_t single_size = 8;
+    const size_t end = n / single_size;
+    __m256 *vdst = (__m256 *)dst;
+    __m256 *vx = (__m256 *)x;
+    __m256 vy = _mm256_broadcast_ss(&scale);
+    for(size_t i=0; i<end; ++i) {
+      vdst[i] = _mm256_mul_ps(vx[i], vy);
+    }
+    for(size_t i=end*single_size; i<n; ++i) {
+      dst[i] = x[i]*scale;
+    }
+}
+
+
+
+float avx_float64_sum(const size_t n, double *x) {
+  static const size_t single_size = 4;
 	const size_t end = n / single_size;
 	__m256d vz={0};
     __m256d *vx = (__m256d *)x;
@@ -58,7 +116,7 @@ float avx_sum64(const size_t n, double *x) {
 	return z[0]+z[1]+z[2]+z[3];
 }
 
-float avx_dot64(const size_t n, double *x, double *y)
+float avx_float64_dot(const size_t n, double *x, double *y)
 {
     static const size_t single_size = 4;
     const size_t end = n / single_size;
@@ -76,25 +134,114 @@ float avx_dot64(const size_t n, double *x, double *y)
     return t[0] + t[1] + t[2] + t[3];
 }
 
+void avx_float64_addto(const size_t n, double *dst,double *x, double *y)
+{
+    static const size_t single_size = 4;
+    const size_t end = n / single_size;
+    __m256d *vdst =(__m256d *)dst;
+    __m256d *vx = (__m256d *)x;
+    __m256d *vy = (__m256d *)y;
+    for(size_t i=0; i<end; ++i) {
+      vdst[i] = _mm256_add_pd(vx[i], vy[i]);
+    }
+    for(size_t i=end*single_size; i<n; ++i) {
+      dst[i] = x[i]+y[i];
+    }
+}
+void avx_float64_subto(const size_t n, double *dst,double *x, double *y)
+{
+    static const size_t single_size = 4;
+    const size_t end = n / single_size;
+    __m256d *vdst =(__m256d *)dst;
+    __m256d *vx = (__m256d *)x;
+    __m256d *vy = (__m256d *)y;
+    for(size_t i=0; i<end; ++i) {
+      vdst[i] = _mm256_sub_pd(vx[i], vy[i]);
+    }
+    for(size_t i=end*single_size; i<n; ++i) {
+      dst[i] = x[i]-y[i];
+    }
+}
+void avx_float64_multo(const size_t n, double *dst,double *x, double *y)
+{
+    static const size_t single_size = 4;
+    const size_t end = n / single_size;
+    __m256d *vdst =(__m256d *)dst;
+    __m256d *vx = (__m256d *)x;
+    __m256d *vy = (__m256d *)y;
+    for(size_t i=0; i<end; ++i) {
+      vdst[i] = _mm256_mul_pd(vx[i], vy[i]);
+    }
+    for(size_t i=end*single_size; i<n; ++i) {
+      dst[i] = x[i]*y[i];
+    }
+}
+void avx_float64_scaleto(const size_t n, double *dst,double *x, double scale)
+{
+    static const size_t single_size = 4;
+    const size_t end = n / single_size;
+    __m256d *vdst =(__m256d *)dst;
+    __m256d *vx = (__m256d *)x;
+    __m256d vy = _mm256_broadcast_sd(&scale);
+    for(size_t i=0; i<end; ++i) {
+      vdst[i] = _mm256_mul_pd(vx[i], vy);
+    }
+    for(size_t i=end*single_size; i<n; ++i) {
+      dst[i] = x[i]*scale;
+    }
+}
 */
 import (
 	"C"
 )
 
-func Sum32(a []float32) float32 {
-	return float32(C.avx_sum32(C.ulong(len(a)), (*C.float)(&a[0])))
+type F32 struct{}
+type F64 struct{}
+
+func (F32) Sum(a []float32) float32 {
+	return float32(C.avx_float32_sum(C.ulong(len(a)), (*C.float)(&a[0])))
 }
 
-func Dot32(size int, x, y []float32) float32 {
-	dot := C.avx_dot32((C.size_t)(size), (*C.float)(&x[0]), (*C.float)(&y[0]))
+func (F32) Dot(x, y []float32) float32 {
+	dot := C.avx_float32_dot((C.size_t)(len(x)), (*C.float)(&x[0]), (*C.float)(&y[0]))
 	return float32(dot)
 }
 
-func Sum64(a []float64) float64 {
-	return float64(C.avx_sum64(C.ulong(len(a)), (*C.double)(&a[0])))
+func (F32) AddTo(dst, x, y []float32) {
+	C.avx_float32_addto((C.size_t)(len(dst)), (*C.float)(&dst[0]), (*C.float)(&x[0]), (*C.float)(&y[0]))
 }
 
-func Dot64(size int, x, y []float64) float64 {
-	dot := C.avx_dot64((C.size_t)(size), (*C.double)(&x[0]), (*C.double)(&y[0]))
+func (F32) SubTo(dst, x, y []float32) {
+	C.avx_float32_subto((C.size_t)(len(dst)), (*C.float)(&dst[0]), (*C.float)(&x[0]), (*C.float)(&y[0]))
+}
+
+func (F32) MulTo(dst, x, y []float32) {
+	C.avx_float32_multo((C.size_t)(len(dst)), (*C.float)(&dst[0]), (*C.float)(&x[0]), (*C.float)(&y[0]))
+}
+func (F32) ScaleTo(dst, x []float32, scale float32) {
+	C.avx_float32_scaleto((C.size_t)(len(dst)), (*C.float)(&dst[0]), (*C.float)(&x[0]), (C.float)(scale))
+}
+
+func (F64) Sum(a []float64) float64 {
+	return float64(C.avx_float64_sum(C.ulong(len(a)), (*C.double)(&a[0])))
+}
+
+func (F64) Dot(x, y []float64) float64 {
+	dot := C.avx_float64_dot((C.size_t)(len(x)), (*C.double)(&x[0]), (*C.double)(&y[0]))
 	return float64(dot)
+}
+
+func (F64) AddTo(dst, x, y []float64) {
+	C.avx_float64_addto((C.size_t)(len(dst)), (*C.double)(&dst[0]), (*C.double)(&x[0]), (*C.double)(&y[0]))
+}
+
+func (F64) SubTo(dst, x, y []float64) {
+	C.avx_float64_subto((C.size_t)(len(dst)), (*C.double)(&dst[0]), (*C.double)(&x[0]), (*C.double)(&y[0]))
+}
+
+func (F64) MulTo(dst, x, y []float64) {
+	C.avx_float64_multo((C.size_t)(len(dst)), (*C.double)(&dst[0]), (*C.double)(&x[0]), (*C.double)(&y[0]))
+}
+func (F64) ScaleTo(dst, x []float64, scale float64) {
+	C.avx_float64_scaleto((C.size_t)(len(dst)), (*C.double)(&dst[0]), (*C.double)(&x[0]), (C.double)(scale))
 }

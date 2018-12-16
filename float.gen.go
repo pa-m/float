@@ -187,6 +187,52 @@ func (F32) Reduce(a []float32, f func(carry, item float32) float32, init float32
 // Square ...
 func (F32) Square(x float32) float32 { return x * x }
 
+// vanillaAddTo  for []float32
+func (F32) vanillaAddTo(dst, a, b []float32) {
+	for i := range dst {
+		dst[i] = a[i] + b[i]
+	}
+}
+
+// vanillaSubTo  for []float32
+func (F32) vanillaSubTo(dst, a, b []float32) {
+	for i := range dst {
+		dst[i] = a[i] - b[i]
+	}
+}
+
+// vanillaMulTo  for []float32
+func (F32) vanillaMulTo(dst, a, b []float32) {
+	for i := range dst {
+		dst[i] = a[i] * b[i]
+	}
+}
+
+// vanillaScaleTo  for []float32
+func (F32) vanillaScaleTo(dst, a []float32, scale float32) {
+	for i := range dst {
+		dst[i] = a[i] * scale
+	}
+}
+
+// vanillaSum for []float32
+func (F32) vanillaSum(a []float32) float32 {
+	acc := float32(0)
+	for _, v := range a {
+		acc += v
+	}
+	return acc
+}
+
+// vanillaDot for []float32
+func (F32) vanillaDot(a, b []float32) float32 {
+	acc := float32(0)
+	for i, v := range a {
+		acc += v * b[i]
+	}
+	return acc
+}
+
 type F64 float64
 type F64s []float64
 
@@ -362,3 +408,49 @@ func (F64) Reduce(a []float64, f func(carry, item float64) float64, init float64
 
 // Square ...
 func (F64) Square(x float64) float64 { return x * x }
+
+// vanillaAddTo  for []float64
+func (F64) vanillaAddTo(dst, a, b []float64) {
+	for i := range dst {
+		dst[i] = a[i] + b[i]
+	}
+}
+
+// vanillaSubTo  for []float64
+func (F64) vanillaSubTo(dst, a, b []float64) {
+	for i := range dst {
+		dst[i] = a[i] - b[i]
+	}
+}
+
+// vanillaMulTo  for []float64
+func (F64) vanillaMulTo(dst, a, b []float64) {
+	for i := range dst {
+		dst[i] = a[i] * b[i]
+	}
+}
+
+// vanillaScaleTo  for []float64
+func (F64) vanillaScaleTo(dst, a []float64, scale float64) {
+	for i := range dst {
+		dst[i] = a[i] * scale
+	}
+}
+
+// vanillaSum for []float64
+func (F64) vanillaSum(a []float64) float64 {
+	acc := float64(0)
+	for _, v := range a {
+		acc += v
+	}
+	return acc
+}
+
+// vanillaDot for []float64
+func (F64) vanillaDot(a, b []float64) float64 {
+	acc := float64(0)
+	for i, v := range a {
+		acc += v * b[i]
+	}
+	return acc
+}
