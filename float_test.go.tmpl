@@ -1,0 +1,87 @@
+package float
+
+import (
+	"fmt"
+	"testing"
+)
+
+{{range .In}}
+func ExampleSign{{.bits}}() {
+	fmt.Println(f{{.bits}}.Sign(-.1), f{{.bits}}.Sign(0), f{{.bits}}.Sign(.1))
+	// Output:
+	//-1 1 1
+}
+
+func ExampleSort{{.bits}}() {
+	a := []float{{.bits}}{4, 3, 2}
+	F{{.bits}}s(a).Sort()
+	fmt.Println(a)
+	// Output:
+	//[2 3 4]
+}
+
+func ExampleSearch{{.bits}}() {
+	fmt.Println(F{{.bits}}s([]float{{.bits}}{2, 3, 4}).Search(3))
+	// Output:
+	// 1
+}
+func ExampleArgSort{{.bits}}() {
+	a := []float{{.bits}}{4, 3, 2}
+	fmt.Println(f{{.bits}}.ArgSort(a))
+	// Output:
+	//[2 1 0]
+}
+
+func ExampleMedian{{.bits}}() {
+	fmt.Println(f{{.bits}}.Median([]float{{.bits}}{5, 2, 1}))
+	// Output:
+	// 2
+}
+
+func ExampleSum{{.bits}}() {
+	fmt.Println(f{{.bits}}.Sum([]float{{.bits}}{5, 2, 1}))
+	// Output:
+	// 8
+}
+
+func ExampleMean{{.bits}}() {
+	fmt.Println(f{{.bits}}.Mean([]float{{.bits}}{6, 2, 1}))
+	// Output:
+	// 3
+}
+func ExampleMaxIdx{{.bits}}() {
+	fmt.Println(f{{.bits}}.MaxIdx([]float{{.bits}}{6, 2, 1}))
+	// Output:
+	// 0
+}
+func ExampleMinIdx{{.bits}}() {
+	fmt.Println(f{{.bits}}.MinIdx([]float{{.bits}}{6, 2, 1}))
+	// Output:
+	// 2
+}
+func ExampleMax{{.bits}}() {
+	fmt.Println(f{{.bits}}.Max([]float{{.bits}}{6, 2, 1}))
+	// Output:
+	// 6
+}
+func ExampleMin{{.bits}}() {
+	fmt.Println(f{{.bits}}.Min([]float{{.bits}}{6, 2, 1}))
+	// Output:
+	// 1
+}
+
+func BenchmarkSum{{.bits}}(b *testing.B) {
+	a := make([]float{{.bits}}, 8760)
+	for i := 0; i < b.N; i++ {
+		f{{.bits}}.Sum(a)
+	}
+}
+
+
+func BenchmarkDot{{.bits}}(b *testing.B) {
+	a := make([]float{{.bits}}, 8760)
+	for i := 0; i < b.N; i++ {
+		f{{.bits}}.Dot(a,a)
+	}
+}
+{{end}}

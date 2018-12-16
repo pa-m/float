@@ -1,0 +1,179 @@
+package float
+
+import(
+    "fmt"
+    "sort"
+	"golang.org/x/sys/cpu"
+	"./avx"
+{{range .In}}
+    math{{.bits}} "{{.mathmodurl}}"
+{{end}}
+)
+
+{{range .In}}
+type F{{.bits}} float{{.bits}}
+type F{{.bits}}s []float{{.bits}}
+
+var f{{.bits}} F{{.bits}}
+
+
+func (F{{.bits}}) NaN() float{{.bits}} {return math{{.bits}}.NaN()}
+
+func (F{{.bits}}) IsNaN(x float{{.bits}}) bool {return math{{.bits}}.IsNaN(x)}
+
+
+// Len (sort.Interface)
+func (a F{{.bits}}s) Len() int { return len(a) }
+
+// Less  (sort.Interface)
+func (a F{{.bits}}s) Less(i, j int) bool { return a[i] < a[j] }
+
+// Swap  (sort.Interface)
+func (a F{{.bits}}s) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
+// Sort  (sort.Interface)
+func (a F{{.bits}}s) Sort() {
+	sort.Sort(F{{.bits}}s(a))
+}
+// Search  (sort.Interface)
+func (a F{{.bits}}s) Search(x float{{.bits}})int {
+	return sort.Search(len(a),func(i int)bool{return a[i]>=x})
+}
+
+// ArgSort ...
+func (F{{.bits}}) ArgSort(a []float{{.bits}}) []int {
+	ind:=make([]int,len(a))
+	for i:=range a{ind[i]=i}
+	sort.Slice(ind,func(i,j int)bool{return a[ind[i]]<a[ind[j]]})
+	return ind
+}
+// Median ...
+func (F{{.bits}}) Median(a []float{{.bits}}) float{{.bits}} {
+	var sorted []float{{.bits}}
+	if sort.IsSorted(F{{.bits}}s(a)) {
+		sorted = a
+	} else {
+		sorted = make([]float{{.bits}}, len(a))
+		copy(sorted, a)
+		sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
+	}
+	return sorted[int(len(sorted)/2)]
+}
+
+// Mean for []float{{.bits}}
+func (F{{.bits}}) Mean(a []float{{.bits}})float{{.bits}} {
+    return f{{.bits}}.Sum(a)/float{{.bits}}(len(a))
+}
+
+// Abs for []float{{.bits}}
+func (F{{.bits}}) Abs(a float{{.bits}})float{{.bits}} {
+    if a<float{{.bits}}(0){
+        return -a
+    }
+    return a
+}
+
+// MaxIdx ...
+func (F{{.bits}}) MaxIdx(a []float{{.bits}}) int {
+	mi := -1
+	for i, v := range a {
+		if mi < 0 || v > a[mi] {
+			mi = i
+		}
+	}
+	return mi
+}
+
+// MinIdx ...
+func (F{{.bits}}) MinIdx(a []float{{.bits}}) int {
+	mi := -1
+	for i, v := range a {
+		if mi < 0 || v < a[mi] {
+			mi = i
+		}
+	}
+	return mi
+}
+
+// Max ...
+func (F{{.bits}}) Max(a []float{{.bits}}) float{{.bits}} {
+	mi := f{{.bits}}.MaxIdx(a)
+	if mi < 0 {
+		return math{{.bits}}.NaN()
+	}
+	return a[mi]
+}
+
+// Min ...
+func (F{{.bits}}) Min(a []float{{.bits}}) float{{.bits}} {
+	mi := f{{.bits}}.MinIdx(a)
+	if mi < 0 {
+		return math{{.bits}}.NaN()
+	}
+	return a[mi]
+}
+
+// Alloc []float{{.bits}}
+func (F{{.bits}}) Alloc(n int, ptrs ...*F{{.bits}}s) {
+	c := n * len(ptrs)
+	a := make(F{{.bits}}s, c)
+	for i, ptr := range ptrs {
+		*ptr = a[n*i : n*i+n]
+	}
+}
+
+// EqualWithinAbs returns true if a and b have an absolute
+// difference of less than tol.
+func (F{{.bits}}) EqualWithinAbs(a, b, tol float{{.bits}}) bool {
+	return a == b || math{{.bits}}.Abs(a-b) <= tol
+}
+
+// CheckFloat ...
+func (F{{.bits}}) CheckFloat(msg string, ai float{{.bits}}) {
+	if math{{.bits}}.IsInf(ai, -1) {
+		panic(fmt.Errorf("-inf at %s", msg))
+
+	}
+	if math{{.bits}}.IsInf(ai, 1) {
+		panic(fmt.Errorf("+inf at %s", msg))
+
+	}
+	if math{{.bits}}.IsNaN(ai) {
+		panic(fmt.Errorf("nan at %s", msg))
+	}
+
+}
+
+// Scale ...
+func (F{{.bits}}) Scale(scale float{{.bits}},a []float{{.bits}}) {
+	for i:=range a{a[i]*=scale}
+}
+// Add ...
+func (F{{.bits}}) Add(dst,a []float{{.bits}}) {
+	for i,v:=range a{dst[i]+=v}
+}
+// Mul ...
+func (F{{.bits}}) Mul(dst,a []float{{.bits}}) {
+	for i,v:=range a{dst[i]*=v}
+}
+
+// Sign ...
+func (F{{.bits}}) Sign(x float{{.bits}}) float{{.bits}} {
+	if math{{.bits}}.Signbit(x){return -1}
+	return 1
+}
+
+
+// Reduce ...
+func (F{{.bits}}) Reduce(a []float{{.bits}}, f func(carry, item float{{.bits}}) float{{.bits}}, init float{{.bits}}) float{{.bits}} {
+	r := init
+	for _, v := range a {
+		r = f(r, v)
+	}
+	return r
+}
+
+// Square ...
+func (F{{.bits}}) Square(x float{{.bits}}) float{{.bits}} {return x*x}
+
+{{end}}

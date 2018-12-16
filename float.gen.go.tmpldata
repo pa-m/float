@@ -1,0 +1,4 @@
+[
+    {"mathmodurl":"github.com/chewxy/math32","blasprefix":"S","bits":32},
+    {"mathmodurl":"math","blasprefix":"D","bits":64}
+]

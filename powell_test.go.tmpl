@@ -1,0 +1,31 @@
+package float
+
+import (
+	"fmt"
+	"log"
+	{{range .In}}math{{.bits}} "{{.mathmodurl}}"
+	{{end}}
+	"os"
+)
+{{range .In}}
+func ExamplePowellMinimizer{{.bits}}() {
+
+	square := func(x float{{.bits}}) float{{.bits}} {
+		return x * x
+	}
+	pm := NewPowellMinimizer{{.bits}}()
+	//pm.Callback = func(x []float{{.bits}}) { fmt.Printf("%.5g\n", x) }
+	//pm.Logger = log.New(os.Stdout, "", 0)
+
+	print(pm.Minimize(
+		func(x []float{{.bits}}) float{{.bits}} { return math{{.bits}}.Log(square(x[0]-2) + square(x[1]-3) + 4) },
+		[]float{{.bits}}{10, 20},
+	))
+
+	// _Output:
+	// [1.9998 3.0111]
+	// [1.9949 3.0034]
+	
+
+}
+{{end}}

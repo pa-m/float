@@ -1,0 +1,1 @@
+Package float offer same operations on float32 and float64 with some AVX2 operations if cgo enabled

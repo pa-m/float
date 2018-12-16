@@ -1,0 +1,45 @@
+//+build !amd64 !cgo
+
+package float
+import(
+    "fmt"
+    "sort"
+	"golang.org/x/sys/cpu"
+	"./avx"
+{{range .In}}
+    math{{.bits}} "{{.mathmodurl}}"
+{{end}}
+)
+{{range .In}}
+// vanillaSum for []float{{.bits}}
+func (F{{.bits}}) vanillaSum(a []float{{.bits}})float{{.bits}} {
+    acc:=float{{.bits}}(0)
+    for _,v:=range a{
+        acc+=v
+    }
+    return acc
+}
+
+// Sum for []float{{.bits}}
+func (f{{.bits}} F{{.bits}}) Sum(a []float{{.bits}}) float{{.bits}} {
+	{
+		return f{{.bits}}.vanillaSum(a)
+	}
+}
+
+// vanillaDot for []float{{.bits}}
+func (F{{.bits}}) vanillaDot(a,b []float{{.bits}})float{{.bits}} {
+    acc:=float{{.bits}}(0)
+    for i,v:=range a{
+        acc+=v*b[i]
+    }
+    return acc
+}
+
+// Dot for []float{{.bits}}
+func (f{{.bits}} F{{.bits}}) Dot(a,b []float{{.bits}}) float{{.bits}} {
+	{
+		return f{{.bits}}.vanillaDot(a,b)
+	}
+}
+{{end}}
