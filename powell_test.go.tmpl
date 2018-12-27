@@ -3,11 +3,11 @@ package float
 import (
 	"fmt"
 	"log"
-	{{range .In}}math{{.bits}} "{{.mathmodurl}}"
+	{{range .In.floatTypes}}math{{.bits}} "{{.mathmodurl}}"
 	{{end}}
 	"os"
 )
-{{range .In}}
+{{range .In.floatTypes}}
 func ExamplePowellMinimizer{{.bits}}() {
 
 	square := func(x float{{.bits}}) float{{.bits}} {
@@ -17,7 +17,7 @@ func ExamplePowellMinimizer{{.bits}}() {
 	//pm.Callback = func(x []float{{.bits}}) { fmt.Printf("%.5g\n", x) }
 	//pm.Logger = log.New(os.Stdout, "", 0)
 
-	print(pm.Minimize(
+	fmt.Printf("%.3f\n", pm.Minimize(
 		func(x []float{{.bits}}) float{{.bits}} { return math{{.bits}}.Log(square(x[0]-2) + square(x[1]-3) + 4) },
 		[]float{{.bits}}{10, 20},
 	))
@@ -26,6 +26,7 @@ func ExamplePowellMinimizer{{.bits}}() {
 	// [1.9998 3.0111]
 	// [1.9949 3.0034]
 	
-
+	// Output:
+	// [1.995 3.003]
 }
 {{end}}

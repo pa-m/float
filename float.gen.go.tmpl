@@ -5,12 +5,12 @@ import(
     "sort"
 	"golang.org/x/sys/cpu"
 	"./avx"
-{{range .In}}
+{{range .In.floatTypes}}
     math{{.bits}} "{{.mathmodurl}}"
 {{end}}
 )
 
-{{range .In}}
+{{range .In.floatTypes}}
 type F{{.bits}} float{{.bits}}
 type F{{.bits}}s []float{{.bits}}
 
@@ -145,16 +145,16 @@ func (F{{.bits}}) CheckFloat(msg string, ai float{{.bits}}) {
 }
 
 // Scale ...
-func (F{{.bits}}) Scale(scale float{{.bits}},a []float{{.bits}}) {
-	for i:=range a{a[i]*=scale}
+func (f{{.bits}} F{{.bits}}) Scale(scale float{{.bits}},a []float{{.bits}}) {
+	f{{.bits}}.ScaleTo(a,a,scale)
 }
 // Add ...
-func (F{{.bits}}) Add(dst,a []float{{.bits}}) {
-	for i,v:=range a{dst[i]+=v}
+func (f{{.bits}} F{{.bits}}) Add(dst,a []float{{.bits}}) {
+	f{{.bits}}.AddTo(dst,dst,a) 
 }
 // Mul ...
-func (F{{.bits}}) Mul(dst,a []float{{.bits}}) {
-	for i,v:=range a{dst[i]*=v}
+func (f{{.bits}} F{{.bits}}) Mul(dst,a []float{{.bits}}) {
+	f{{.bits}}.MulTo(dst,dst,a)
 }
 
 // Sign ...
@@ -176,45 +176,153 @@ func (F{{.bits}}) Reduce(a []float{{.bits}}, f func(carry, item float{{.bits}}) 
 // Square ...
 func (F{{.bits}}) Square(x float{{.bits}}) float{{.bits}} {return x*x}
 
-// vanillaAddTo  for []float{{.bits}}
+// vanillaAddTo perform naive dst = a+b for []float{{.bits}}
 func (F{{.bits}}) vanillaAddTo(dst,a,b []float{{.bits}}) {
-	for i:=range dst {
-		dst[i] = a[i]+b[i]
+	l:=len(a)
+	b=b[:l]
+	for i:=0;i<l;i++ {
+		dst[i] = a[i] + b[i]
 	}
 }
-// vanillaSubTo  for []float{{.bits}}
+// unrolledAddTo perform dst = a+b with loop unrolling for []float{{.bits}}
+func (F{{.bits}}) unrolledAddTo(dst,a,b []float{{.bits}}) {
+	const groupsize={{.unrollSize}}
+
+	l:=len(a)
+	b=b[:l]
+	end:=(l/groupsize)*groupsize
+	var i int
+	for i=0;i<end;i+=groupsize {
+		{{ range .unrollOffsets }} 
+		dst[i+{{.offset}}] = a[i+{{.offset}}] + b[i+{{.offset}}] 
+		{{ end }}
+	}
+	for i=end;i<l;i++ {
+		dst[i] = a[i] + b[i]
+	}
+
+}
+// vanillaSubTo perform naive dst = a - b for []float{{.bits}}
 func (F{{.bits}}) vanillaSubTo(dst,a,b []float{{.bits}}) {
-	for i:=range dst {
-		dst[i] = a[i]-b[i]
+	l:=len(a)
+	b=b[:l]
+	for i:=0;i<l;i++ {
+		dst[i] = a[i] - b[i]
 	}
 }
-// vanillaMulTo  for []float{{.bits}}
+// unrolledSubTo perform dst = a - b with loop unrolling for []float{{.bits}}
+func (F{{.bits}}) unrolledSubTo(dst,a,b []float{{.bits}}) {
+	const groupsize={{.unrollSize}}
+	l:=len(a)
+	b=b[:l]
+	end:=(l/groupsize)*groupsize
+	var i int
+	for i=0;i<end;i+=groupsize {
+		{{ range .unrollOffsets }} 
+		dst[i+{{.offset}}] = a[i+{{.offset}}] - b[i+{{.offset}}] 
+		{{ end }}
+	}
+	for i=end;i<l;i++ {
+		dst[i] = a[i] - b[i]
+	}
+}
+// vanillaMulTo perform naive dst = a * b for []float{{.bits}}
 func (F{{.bits}}) vanillaMulTo(dst,a,b []float{{.bits}}) {
-	for i:=range dst {
-		dst[i] = a[i]*b[i]
+	l:=len(a)
+	b=b[:l]
+	for i:=0;i<l;i++ {
+		dst[i] = a[i] * b[i]
 	}
 }
-// vanillaScaleTo  for []float{{.bits}}
+// unrolledMulTo perform dst = a * b with loop unrolling for []float{{.bits}}
+func (F{{.bits}}) unrolledMulTo(dst,a,b []float{{.bits}}) {
+	const groupsize={{.unrollSize}}
+	l:=len(a)
+	b=b[:l]
+	end:=(l/groupsize)*groupsize
+	var i int
+	for i=0;i<end;i+=groupsize {
+		{{ range .unrollOffsets }} 
+		dst[i+{{.offset}}] = a[i+{{.offset}}] * b[i+{{.offset}}] 
+		{{ end }}
+	}
+	for i=end;i<l;i++ {
+		dst[i] = a[i] * b[i]
+	}
+}
+// vanillaScaleTo perform naive dst = a * scale for []float{{.bits}}
 func (F{{.bits}}) vanillaScaleTo(dst,a []float{{.bits}},scale float{{.bits}}) {
-	for i:=range dst {
-		dst[i] = a[i]*scale
+	l:=len(a)
+	for i:=0;i<l;i++ {
+		dst[i] = a[i] * scale
+	}
+}
+// unrolledScaleTo perform dst = a * scale with loop unrolling for []float{{.bits}}
+func (F{{.bits}}) unrolledScaleTo(dst,a []float{{.bits}},scale float{{.bits}}) {
+	const groupsize={{.unrollSize}}
+	l:=len(a)
+	end:=(l/groupsize)*groupsize
+	var i int
+	for i=0;i<end;i+=groupsize {
+		{{ range .unrollOffsets }} 
+		dst[i+{{.offset}}] = a[i+{{.offset}}] * scale 
+		{{ end }}
+	}
+	for i=end;i<l;i++ {
+		dst[i] = a[i] * scale
 	}
 }
 
 // vanillaSum for []float{{.bits}}
 func (F{{.bits}}) vanillaSum(a []float{{.bits}})float{{.bits}} {
-    acc:=float{{.bits}}(0)
-    for _,v:=range a{
-        acc+=v
-    }
-    return acc
+	var acc float{{.bits}}
+	l:=len(a)
+	for i:=0;i<l;i++ {
+		acc += a[i]
+	}
+	return acc
+}
+
+// unrolledSum for []float{{.bits}}
+func (F{{.bits}}) unrolledSum(a []float{{.bits}})float{{.bits}} {
+	var acc float{{.bits}}
+	const groupsize={{.unrollSize}}
+
+	l:=len(a)
+	end:=(l/groupsize)*groupsize
+	var i int
+	for i=0;i<end;i+=groupsize {
+		acc+={{- range .unrollOffsets -}} +a[i+{{.offset}}] {{- end -}}
+	}
+	for i=end;i<l;i++ {
+		acc += a[i]
+	}
+	return acc
 }
 
 // vanillaDot for []float{{.bits}}
 func (F{{.bits}}) vanillaDot(a, b []float{{.bits}}) float{{.bits}} {
-	acc := float{{.bits}}(0)
-	for i, v := range a {
-		acc += v * b[i]
+	var acc float{{.bits}}
+	l:=len(a)
+	b=b[:l]
+	for i:=0;i<l;i++ {
+		acc += a[i] * b[i]
+	}
+	return acc
+}
+// unrolledDot for []float{{.bits}}
+func (F{{.bits}}) unrolledDot(a, b []float{{.bits}}) float{{.bits}} {
+	var acc float{{.bits}}
+	const groupsize={{.unrollSize}}
+	l:=len(a)
+	b=b[:l]
+	end:=(l/groupsize)*groupsize
+	var i int
+	for i=0;i<end;i+=groupsize {
+		acc+={{- range .unrollOffsets -}} + a[i+{{.offset}}]*b[i+{{.offset}}]{{- end -}}
+	}
+	for i=end;i<l;i++ {
+		acc += a[i] * b[i]
 	}
 	return acc
 }

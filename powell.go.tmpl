@@ -2,11 +2,13 @@ package float
 
 import (
 	"log"
-	{{range .In}}
+	{{range .In.floatTypes}}
 	math{{.bits}} "{{.mathmodurl}}"
 	{{end}}
 )
-{{range .In}}
+
+
+{{range .In.floatTypes}}
 // PowellMinimizer{{.bits}} minimizes a scalar function of multidimensionnal x using modified Powell algorithm
 // (see fmin_powell in scipy.optimize)
 type PowellMinimizer{{.bits}} struct {
@@ -26,6 +28,7 @@ func NewPowellMinimizer{{.bits}}() (pm *PowellMinimizer{{.bits}}) {
 func (pm *PowellMinimizer{{.bits}}) Minimize(f func([]float{{.bits}}) float{{.bits}}, x0 []float{{.bits}})[]float{{.bits}} {
 	return minimizePowell{{.bits}}(f, x0, pm.Callback, pm.Xtol, pm.Ftol, pm.MaxIter, pm.MaxFev, pm.Logger)
 }
+
 
 // Minimization of scalar function of one or more variables using the
 // modified Powell algorithm.

@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
-{{range .In}}
+{{range .In.floatTypes}}
     math{{.bits}} "{{.mathmodurl}}"
 {{end}}
 )
-{{range .In}}
+{{range .In.floatTypes}}
 // Brent find zero of f using Brent's method
 // see https://en.wikipedia.org/wiki/Brent%27s_method
 // logger may be nil

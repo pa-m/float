@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-{{range .In}}
+{{range .In.floatTypes}}
     math{{.bits}} "{{.mathmodurl}}"
 {{end}}
 )
-{{range .In}}
+{{range .In.floatTypes}}
 
 func ExampleBrent{{.bits}}() {
 	//On cherche à identifier une racine de f(x) = (x + 3)(x − 1)2

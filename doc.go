@@ -16,3 +16,7 @@ package float
 //go:generate go run _tools/tmpl/main.go -i -data float.gen.go.tmpldata brent.go.tmpl
 
 //go:generate go run _tools/tmpl/main.go -i -data float.gen.go.tmpldata brent_test.go.tmpl
+
+//go:generate clang -masm=intel -mno-red-zone -mstackrealign -mllvm -inline-threshold=1000 -fno-asynchronous-unwind-tables -fno-exceptions -fno-rtti -O3 -mavx -mavx2 -mavx512f -mfma -S -oC/avx.s C/avx.c
+
+//go:generate c2goasm -a C/avx.s avx_amd64.s

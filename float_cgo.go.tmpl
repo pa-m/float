@@ -1,4 +1,4 @@
-//+build amd64,cgo
+//+build cgo,amd64
 
 package float
 import(
@@ -6,23 +6,33 @@ import(
     "sort"
 	"golang.org/x/sys/cpu"
 	"./avx"
-{{range .In}}
+{{range .In.floatTypes}}
     math{{.bits}} "{{.mathmodurl}}"
 {{end}}
 )
-{{range .In}}
+
+const lenCgoAvx2Faster=80
+
+{{range .In.floatTypes}}
 
 // AddTo  for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) AddTo(dst,a,b []float{{.bits}}) {
-	if cpu.X86.HasAVX2 {
-		 (avx.F{{.bits}}{}).AddTo(dst,a,b)
+    l:=len(a)
+	b=b[:l]
+	dst=dst[:l]
+	if cpu.X86.HasAVX2 && l>lenCgoAvx2Faster {
+		 //avx_float{{.bits}}_addto(a,b,dst)
+		 avx.F{{.bits}}{}.AddTo(dst,a,b)
 	}else{
 		 f{{.bits}}.vanillaAddTo(dst,a,b)
 	}
 }
 // SubTo  for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) SubTo(dst,a,b []float{{.bits}}) {
-	if cpu.X86.HasAVX2 {
+    l:=len(a)
+	b=b[:l]
+	dst=dst[:l]
+	if cpu.X86.HasAVX2 && l>lenCgoAvx2Faster {
 		 (avx.F{{.bits}}{}).SubTo(dst,a,b)
 	}else{
 		 f{{.bits}}.vanillaSubTo(dst,a,b)
@@ -30,7 +40,10 @@ func (f{{.bits}} F{{.bits}}) SubTo(dst,a,b []float{{.bits}}) {
 }
 // MulTo  for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) MulTo(dst,a,b []float{{.bits}}) {
-	if cpu.X86.HasAVX2 {
+    l:=len(a)
+	b=b[:l]
+	dst=dst[:l]
+	if cpu.X86.HasAVX2 && l>lenCgoAvx2Faster {
 		 (avx.F{{.bits}}{}).MulTo(dst,a,b)
 	}else{
 		 f{{.bits}}.vanillaMulTo(dst,a,b)
@@ -38,7 +51,9 @@ func (f{{.bits}} F{{.bits}}) MulTo(dst,a,b []float{{.bits}}) {
 }
 // ScaleTo  for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) ScaleTo(dst,a []float{{.bits}},scale float{{.bits}}) {
-	if cpu.X86.HasAVX2 {
+    l:=len(a)
+	dst=dst[:l]
+	if cpu.X86.HasAVX2 && l>lenCgoAvx2Faster {
 		 (avx.F{{.bits}}{}).ScaleTo(dst,a,scale)
 	}else{
 		 f{{.bits}}.vanillaScaleTo(dst,a,scale)
@@ -47,17 +62,21 @@ func (f{{.bits}} F{{.bits}}) ScaleTo(dst,a []float{{.bits}},scale float{{.bits}}
 
 // Sum for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) Sum(a []float{{.bits}}) float{{.bits}} {
-	if cpu.X86.HasAVX2 {
-		return (avx.F{{.bits}}{}).Sum(a)
-	}else{
-		return f{{.bits}}.vanillaSum(a)
-	}
+			l:=len(a)
+			if cpu.X86.HasAVX2 && l>lenCgoAvx2Faster {
+				return (avx.F{{.bits}}{}).Sum(a)
+			}else{
+				return f{{.bits}}.vanillaSum(a)
+			}
 }
 
 // Dot for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) Dot(a,b []float{{.bits}}) float{{.bits}} {
-	if cpu.X86.HasAVX2 {
-		return (avx.F{{.bits}}{}).Dot(a,b)
+    l:=len(a)
+	b=b[:l]
+	if cpu.X86.HasAVX2 && l>lenCgoAvx2Faster {
+		//return avx_float{{.bits}}_dot(a,b)
+		return avxFloat{{.bits}}Dot(a,b)
 	}else{
 		return f{{.bits}}.vanillaDot(a,b)
 	}

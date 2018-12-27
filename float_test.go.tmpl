@@ -3,9 +3,19 @@ package float
 import (
 	"fmt"
 	"testing"
+	{{range .In.floatTypes}}
+	"gonum.org/v1/gonum/blas/blas{{.bits}}"
+	{{end}}
 )
 
-{{range .In}}
+	func blas32Dot(x,y []float32) float32{
+		return blas32.Dot(len(x),blas32.Vector{1,x},blas32.Vector{1,y})
+	}
+	func blas64Dot(x,y []float64) float64{
+		return blas64.Dot(blas64.Vector{len(x),1,x},blas64.Vector{len(y),1,y})
+	}
+
+{{range .In.floatTypes}}
 func ExampleSign{{.bits}}() {
 	fmt.Println(f{{.bits}}.Sign(-.1), f{{.bits}}.Sign(0), f{{.bits}}.Sign(.1))
 	// Output:
@@ -38,10 +48,221 @@ func ExampleMedian{{.bits}}() {
 	// 2
 }
 
-func ExampleSum{{.bits}}() {
-	fmt.Println(f{{.bits}}.Sum([]float{{.bits}}{5, 2, 1}))
+func random{{.bits}}(n int)[]float{{.bits}} {
+	x:=make([]float{{.bits}},n)
+	for i:=range x {
+		x[i] = rand.Float{{.bits}}()
+	}
+	return x
+}
+
+func ExampleScale{{.bits}}() {
+	x := random{{.bits}}(123)
+	scale := rand.Float{{.bits}}()
+	expected := make([]float{{.bits}},123)
+	actual := make([]float{{.bits}},123)
+	for i:=range x {
+		expected[i] = x[i]*scale
+	}
+	for _,o:=range []struct{Name string;Func func(scale float{{.bits}}, x []float{{.bits}})}{
+		{"Scale",f{{.bits}}.Scale},
+	}{
+		copy(actual,x)
+		o.Func(scale,actual)
+		for i:=range x{
+			if f{{.bits}}.Abs(actual[i]-expected[i])>.001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
 	// Output:
-	// 8
+}
+
+func ExampleAdd{{.bits}}() {
+	x := random{{.bits}}(123)
+	y := random{{.bits}}(123)
+	expected := make([]float{{.bits}},123)
+	actual := make([]float{{.bits}},123)
+	for i:=range x {
+		expected[i] = x[i]+y[i]
+	}
+	for _,o:=range []struct{Name string;Func func(x,y []float{{.bits}})}{
+		{"Add",f{{.bits}}.Add},
+	}{
+		copy(actual,x)
+		o.Func(actual,y)
+		for i:=range x{
+			if f{{.bits}}.Abs(actual[i]-expected[i])>.001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
+	// Output:
+}
+
+func ExampleMul{{.bits}}() {
+	x := random{{.bits}}(123)
+	y := random{{.bits}}(123)
+	expected := make([]float{{.bits}},123)
+	actual := make([]float{{.bits}},123)
+	for i:=range x {
+		expected[i] = x[i]*y[i]
+	}
+	for _,o:=range []struct{Name string;Func func(x,y []float{{.bits}})}{
+		{"Add",f{{.bits}}.Mul},
+	}{
+		copy(actual,x)
+		o.Func(actual,y)
+		for i:=range x{
+			if f{{.bits}}.Abs(actual[i]-expected[i])>.001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
+	// Output:
+}
+
+func ExampleAddTo{{.bits}}() {
+	x := random{{.bits}}(123)
+	y := random{{.bits}}(123)
+	expected := make([]float{{.bits}},123)
+	actual := make([]float{{.bits}},123)
+	for i:=range x {
+		expected[i] = x[i]+y[i]
+	}
+	for _,o:=range []struct{Name string;Func func(dst,x,y []float{{.bits}})}{
+		{"vanilla",f{{.bits}}.vanillaAddTo},
+		{"unrolled",f{{.bits}}.unrolledAddTo},
+		{"avx",f{{.bits}}.AddTo},
+	}{
+
+		o.Func(actual,x,y)
+		for i:=range x{
+			if f{{.bits}}.Abs(actual[i]-expected[i])>.001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
+	// Output:
+}
+
+func ExampleSubTo{{.bits}}() {
+	x := random{{.bits}}(123)
+	y := random{{.bits}}(123)
+	expected := make([]float{{.bits}},123)
+	actual := make([]float{{.bits}},123)
+	for i:=range x {
+		expected[i] = x[i]-y[i]
+	}
+	for _,o:=range []struct{Name string;Func func(dst,x,y []float{{.bits}})}{
+		{"vanilla",f{{.bits}}.vanillaSubTo},
+		{"unrolled",f{{.bits}}.unrolledSubTo},
+		{"avx",f{{.bits}}.SubTo},
+	}{
+
+		o.Func(actual,x,y)
+		for i:=range x{
+			if f{{.bits}}.Abs(actual[i]-expected[i])>.001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+	// Output:
+}
+
+func ExampleMulTo{{.bits}}() {
+	x := random{{.bits}}(123)
+	y := random{{.bits}}(123)
+	expected := make([]float{{.bits}},123)
+	actual := make([]float{{.bits}},123)
+	for i:=range x {
+		expected[i] = x[i]*y[i]
+	}
+	for _,o:=range []struct{Name string;Func func(dst,x,y []float{{.bits}})}{
+		{"vanilla",f{{.bits}}.vanillaMulTo},
+		{"unrolled",f{{.bits}}.unrolledMulTo},
+		{"avx",f{{.bits}}.MulTo},
+	}{
+
+		o.Func(actual,x,y)
+		for i:=range x{
+			if f{{.bits}}.Abs(actual[i]-expected[i])>.001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+	// Output:
+}
+
+func ExampleScaleTo{{.bits}}() {
+	x := random{{.bits}}(123)
+	scale := rand.Float{{.bits}}()
+	expected := make([]float{{.bits}},123)
+	actual := make([]float{{.bits}},123)
+	for i:=range x {
+		expected[i] = x[i]*scale
+	}
+	for _,o:=range []struct{Name string;Func func(dst,x []float{{.bits}},scale float{{.bits}})}{
+		{"vanilla",f{{.bits}}.vanillaScaleTo},
+		{"unrolled",f{{.bits}}.unrolledScaleTo},
+		{"avx",f{{.bits}}.ScaleTo},
+	}{
+
+		o.Func(actual,x,scale)
+		for i:=range x{
+			if f{{.bits}}.Abs(actual[i]-expected[i])>.001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+	// Output:
+}
+
+func ExampleSum{{.bits}}() {
+	x := random{{.bits}}(123)
+	var expected,actual float{{.bits}}
+	for i:=range x {
+		expected+= x[i]
+	}
+	for _,o:=range []struct{Name string;Func func(x []float{{.bits}})float{{.bits}}}{
+		{"vanilla",f{{.bits}}.vanillaSum},
+		{"unrolled",f{{.bits}}.unrolledSum},
+		{"avx",f{{.bits}}.Sum},
+	}{
+
+		actual=o.Func(x)
+			if f{{.bits}}.Abs(actual-expected)>.001 {
+				fmt.Printf("%s Expected %g actual %g\n", o.Name, expected, actual)
+			}
+		
+	}
+	// Output:
+}
+
+func ExampleDot{{.bits}}() {
+	
+	x,y := random{{.bits}}(123), random{{.bits}}(123)
+	var expected,actual float{{.bits}}
+	for i:=range x {
+		expected+= x[i]*y[i]
+	}
+	for _,o:=range []struct{Name string;Func func(x,y []float{{.bits}})float{{.bits}}}{
+		{"vanilla",f{{.bits}}.vanillaDot},
+		{"unrolled",f{{.bits}}.unrolledDot},
+		{"avx",f{{.bits}}.Dot},
+	}{
+
+		actual=o.Func(x, y)
+			if f{{.bits}}.Abs(actual-expected)>.001 {
+				fmt.Printf("%s Expected %g actual %g\n", o.Name, expected, actual)
+			}
+		
+	}
+	// Output:
 }
 
 func ExampleMean{{.bits}}() {
@@ -70,6 +291,20 @@ func ExampleMin{{.bits}}() {
 	// 1
 }
 
+func ExampleAlloc{{.bits}}() {
+	var a,b F{{.bits}}s
+	f{{.bits}}.Alloc(8760,&a,&b)
+	if a==nil||b==nil||len(a)!=len(b) {fmt.Println("unexpected")}
+	//Output:
+}
+func ExampleEqualWithinAbs{{.bits}}() {
+	var expected,actual bool
+	expected,actual=true,f{{.bits}}.EqualWithinAbs(1,1.1,.101)
+	if expected!=actual {fmt.Printf("expected %v actual %v\n", expected, actual)}
+	expected,actual=false,f{{.bits}}.EqualWithinAbs(1,1.1,.099)
+	if expected!=actual {fmt.Printf("expected %v actual %v\n", expected, actual)}
+	// Output:	
+}
 func BenchmarkSum{{.bits}}(b *testing.B) {
 	a := make([]float{{.bits}}, 8760)
 	
@@ -78,6 +313,7 @@ func BenchmarkSum{{.bits}}(b *testing.B) {
 		Func func([]float{{.bits}}) float{{.bits}}
 	}{
 		{"vanillaSum", f{{.bits}}.vanillaSum},
+		{"unrolledSum", f{{.bits}}.unrolledSum},
 		{"Sum", f{{.bits}}.Sum},
 	} {
 		b.Run(f.Name, func(b *testing.B) {
@@ -90,19 +326,24 @@ func BenchmarkSum{{.bits}}(b *testing.B) {
 
 
 func BenchmarkDot{{.bits}}(b *testing.B) {
-	a := make([]float{{.bits}}, 8760)
-	for _, f := range []struct {
-		Name string
-		Func func(x,y []float{{.bits}}) float{{.bits}}
-	}{
-		{"vanillaDot", f{{.bits}}.vanillaDot},
-		{"Dot", f{{.bits}}.Dot},
-	} {
-		b.Run(f.Name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				f.Func(a,a)
+	a := make([]float{{.bits}}, 81818)
+	for _,l:=range []int{818,8181,81818}{
+			for _, f := range []struct {
+				Name string
+				Func func(x,y []float{{.bits}}) float{{.bits}}
+			}{
+				{fmt.Sprintf("vanillaDot/%d",l), f{{.bits}}.vanillaDot},
+				{fmt.Sprintf("unrolledDot/%d",l), f{{.bits}}.unrolledDot},
+				{fmt.Sprintf("blas{{.bits}}.Dot/%d",l),blas{{.bits}}Dot},
+				{fmt.Sprintf("avx{{.bits}}.Dot/%d",l), (avx.F{{.bits}}{}).Dot},
+				{fmt.Sprintf("asm_avx{{.bits}}.Dot/%d",l), avxFloat{{.bits}}Dot},
+			} {
+				b.Run(f.Name, func(b *testing.B) {
+					for i := 0; i < b.N; i++ {
+						f.Func(a[:l],a[:l])
+					}
+				})
 			}
-		})
 	}
 }
 {{end}}

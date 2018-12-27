@@ -1,4 +1,4 @@
-//+build !amd64 !cgo
+//+build !cgo !amd64
 
 package float
 import(
@@ -6,31 +6,31 @@ import(
     "sort"
 	"golang.org/x/sys/cpu"
 	"./avx"
-{{range .In}}
+{{range .In.floatTypes}}
     math{{.bits}} "{{.mathmodurl}}"
 {{end}}
 )
-{{range .In}}
+{{range .In.floatTypes}}
 
 
 // AddTo  for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) AddTo(dst,a,b []float{{.bits}}) {
-		 f{{.bits}}.vanillaAddTo(dst,a,b)
+		 f{{.bits}}.unrolledAddTo(dst,a,b)
 	
 }
 // SubTo  for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) SubTo(dst,a,b []float{{.bits}}) {
-		 f{{.bits}}.vanillaSubTo(dst,a,b)
+		 f{{.bits}}.unrolledSubTo(dst,a,b)
 	
 }
 // MulTo  for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) MulTo(dst,a,b []float{{.bits}}) {
-		 f{{.bits}}.vanillaMulTo(dst,a,b)
+		 f{{.bits}}.unrolledMulTo(dst,a,b)
 	
 }
 // ScaleTo  for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) ScaleTo(dst,a []float{{.bits}},scale float{{.bits}}) {
-		 f{{.bits}}.vanillaScaleTo(dst,a,scale)
+		 f{{.bits}}.unrolledScaleTo(dst,a,scale)
 	
 }
 
@@ -38,7 +38,7 @@ func (f{{.bits}} F{{.bits}}) ScaleTo(dst,a []float{{.bits}},scale float{{.bits}}
 // Sum for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) Sum(a []float{{.bits}}) float{{.bits}} {
 	{
-		return f{{.bits}}.vanillaSum(a)
+		return f{{.bits}}.unrolledSum(a)
 	}
 }
 
@@ -46,7 +46,7 @@ func (f{{.bits}} F{{.bits}}) Sum(a []float{{.bits}}) float{{.bits}} {
 // Dot for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) Dot(a,b []float{{.bits}}) float{{.bits}} {
 	{
-		return f{{.bits}}.vanillaDot(a,b)
+		return f{{.bits}}.unrolledDot(a,b)
 	}
 }
 {{end}}

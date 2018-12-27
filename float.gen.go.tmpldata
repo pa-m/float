@@ -1,4 +1,12 @@
-[
-    {"mathmodurl":"github.com/chewxy/math32","blasprefix":"S","bits":32},
-    {"mathmodurl":"math","blasprefix":"D","bits":64}
-]
+{
+    "floatTypes": [
+        {"mathmodurl":"github.com/chewxy/math32","blasprefix":"S","bits":32,
+            "unrollSize":8,
+            "unrollOffsets":[{"offset":0},{"offset":1},{"offset":2},{"offset":3},{"offset":4},{"offset":5},{"offset":6},{"offset":7}]
+        },
+        {"mathmodurl":"math","blasprefix":"D","bits":64,
+            "unrollSize":4,
+            "unrollOffsets":[{"offset":0},{"offset":1},{"offset":2},{"offset":3}]
+        }
+    ]
+}

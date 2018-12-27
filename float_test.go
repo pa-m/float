@@ -4,8 +4,21 @@ package float
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
+
+	"./avx"
+	"gonum.org/v1/gonum/blas/blas32"
+
+	"gonum.org/v1/gonum/blas/blas64"
 )
+
+func blas32Dot(x, y []float32) float32 {
+	return blas32.Dot(len(x), blas32.Vector{1, x}, blas32.Vector{1, y})
+}
+func blas64Dot(x, y []float64) float64 {
+	return blas64.Dot(blas64.Vector{len(x), 1, x}, blas64.Vector{len(y), 1, y})
+}
 
 func ExampleSign32() {
 	fmt.Println(f32.Sign(-.1), f32.Sign(0), f32.Sign(.1))
@@ -39,10 +52,248 @@ func ExampleMedian32() {
 	// 2
 }
 
-func ExampleSum32() {
-	fmt.Println(f32.Sum([]float32{5, 2, 1}))
+func random32(n int) []float32 {
+	x := make([]float32, n)
+	for i := range x {
+		x[i] = rand.Float32()
+	}
+	return x
+}
+
+func ExampleScale32() {
+	x := random32(123)
+	scale := rand.Float32()
+	expected := make([]float32, 123)
+	actual := make([]float32, 123)
+	for i := range x {
+		expected[i] = x[i] * scale
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(scale float32, x []float32)
+	}{
+		{"Scale", f32.Scale},
+	} {
+		copy(actual, x)
+		o.Func(scale, actual)
+		for i := range x {
+			if f32.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
 	// Output:
-	// 8
+}
+
+func ExampleAdd32() {
+	x := random32(123)
+	y := random32(123)
+	expected := make([]float32, 123)
+	actual := make([]float32, 123)
+	for i := range x {
+		expected[i] = x[i] + y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(x, y []float32)
+	}{
+		{"Add", f32.Add},
+	} {
+		copy(actual, x)
+		o.Func(actual, y)
+		for i := range x {
+			if f32.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
+	// Output:
+}
+
+func ExampleMul32() {
+	x := random32(123)
+	y := random32(123)
+	expected := make([]float32, 123)
+	actual := make([]float32, 123)
+	for i := range x {
+		expected[i] = x[i] * y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(x, y []float32)
+	}{
+		{"Add", f32.Mul},
+	} {
+		copy(actual, x)
+		o.Func(actual, y)
+		for i := range x {
+			if f32.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
+	// Output:
+}
+
+func ExampleAddTo32() {
+	x := random32(123)
+	y := random32(123)
+	expected := make([]float32, 123)
+	actual := make([]float32, 123)
+	for i := range x {
+		expected[i] = x[i] + y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(dst, x, y []float32)
+	}{
+		{"vanilla", f32.vanillaAddTo},
+		{"unrolled", f32.unrolledAddTo},
+		{"avx", f32.AddTo},
+	} {
+
+		o.Func(actual, x, y)
+		for i := range x {
+			if f32.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
+	// Output:
+}
+
+func ExampleSubTo32() {
+	x := random32(123)
+	y := random32(123)
+	expected := make([]float32, 123)
+	actual := make([]float32, 123)
+	for i := range x {
+		expected[i] = x[i] - y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(dst, x, y []float32)
+	}{
+		{"vanilla", f32.vanillaSubTo},
+		{"unrolled", f32.unrolledSubTo},
+		{"avx", f32.SubTo},
+	} {
+
+		o.Func(actual, x, y)
+		for i := range x {
+			if f32.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+	// Output:
+}
+
+func ExampleMulTo32() {
+	x := random32(123)
+	y := random32(123)
+	expected := make([]float32, 123)
+	actual := make([]float32, 123)
+	for i := range x {
+		expected[i] = x[i] * y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(dst, x, y []float32)
+	}{
+		{"vanilla", f32.vanillaMulTo},
+		{"unrolled", f32.unrolledMulTo},
+		{"avx", f32.MulTo},
+	} {
+
+		o.Func(actual, x, y)
+		for i := range x {
+			if f32.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+	// Output:
+}
+
+func ExampleScaleTo32() {
+	x := random32(123)
+	scale := rand.Float32()
+	expected := make([]float32, 123)
+	actual := make([]float32, 123)
+	for i := range x {
+		expected[i] = x[i] * scale
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(dst, x []float32, scale float32)
+	}{
+		{"vanilla", f32.vanillaScaleTo},
+		{"unrolled", f32.unrolledScaleTo},
+		{"avx", f32.ScaleTo},
+	} {
+
+		o.Func(actual, x, scale)
+		for i := range x {
+			if f32.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+	// Output:
+}
+
+func ExampleSum32() {
+	x := random32(123)
+	var expected, actual float32
+	for i := range x {
+		expected += x[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(x []float32) float32
+	}{
+		{"vanilla", f32.vanillaSum},
+		{"unrolled", f32.unrolledSum},
+		{"avx", f32.Sum},
+	} {
+
+		actual = o.Func(x)
+		if f32.Abs(actual-expected) > .001 {
+			fmt.Printf("%s Expected %g actual %g\n", o.Name, expected, actual)
+		}
+
+	}
+	// Output:
+}
+
+func ExampleDot32() {
+
+	x, y := random32(123), random32(123)
+	var expected, actual float32
+	for i := range x {
+		expected += x[i] * y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(x, y []float32) float32
+	}{
+		{"vanilla", f32.vanillaDot},
+		{"unrolled", f32.unrolledDot},
+		{"avx", f32.Dot},
+	} {
+
+		actual = o.Func(x, y)
+		if f32.Abs(actual-expected) > .001 {
+			fmt.Printf("%s Expected %g actual %g\n", o.Name, expected, actual)
+		}
+
+	}
+	// Output:
 }
 
 func ExampleMean32() {
@@ -71,6 +322,26 @@ func ExampleMin32() {
 	// 1
 }
 
+func ExampleAlloc32() {
+	var a, b F32s
+	f32.Alloc(8760, &a, &b)
+	if a == nil || b == nil || len(a) != len(b) {
+		fmt.Println("unexpected")
+	}
+	//Output:
+}
+func ExampleEqualWithinAbs32() {
+	var expected, actual bool
+	expected, actual = true, f32.EqualWithinAbs(1, 1.1, .101)
+	if expected != actual {
+		fmt.Printf("expected %v actual %v\n", expected, actual)
+	}
+	expected, actual = false, f32.EqualWithinAbs(1, 1.1, .099)
+	if expected != actual {
+		fmt.Printf("expected %v actual %v\n", expected, actual)
+	}
+	// Output:
+}
 func BenchmarkSum32(b *testing.B) {
 	a := make([]float32, 8760)
 
@@ -79,6 +350,7 @@ func BenchmarkSum32(b *testing.B) {
 		Func func([]float32) float32
 	}{
 		{"vanillaSum", f32.vanillaSum},
+		{"unrolledSum", f32.unrolledSum},
 		{"Sum", f32.Sum},
 	} {
 		b.Run(f.Name, func(b *testing.B) {
@@ -90,19 +362,24 @@ func BenchmarkSum32(b *testing.B) {
 }
 
 func BenchmarkDot32(b *testing.B) {
-	a := make([]float32, 8760)
-	for _, f := range []struct {
-		Name string
-		Func func(x, y []float32) float32
-	}{
-		{"vanillaDot", f32.vanillaDot},
-		{"Dot", f32.Dot},
-	} {
-		b.Run(f.Name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				f.Func(a, a)
-			}
-		})
+	a := make([]float32, 81818)
+	for _, l := range []int{818, 8181, 81818} {
+		for _, f := range []struct {
+			Name string
+			Func func(x, y []float32) float32
+		}{
+			{fmt.Sprintf("vanillaDot/%d", l), f32.vanillaDot},
+			{fmt.Sprintf("unrolledDot/%d", l), f32.unrolledDot},
+			{fmt.Sprintf("blas32.Dot/%d", l), blas32Dot},
+			{fmt.Sprintf("avx32.Dot/%d", l), (avx.F32{}).Dot},
+			{fmt.Sprintf("asm_avx32.Dot/%d", l), avxFloat32Dot},
+		} {
+			b.Run(f.Name, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					f.Func(a[:l], a[:l])
+				}
+			})
+		}
 	}
 }
 
@@ -138,10 +415,248 @@ func ExampleMedian64() {
 	// 2
 }
 
-func ExampleSum64() {
-	fmt.Println(f64.Sum([]float64{5, 2, 1}))
+func random64(n int) []float64 {
+	x := make([]float64, n)
+	for i := range x {
+		x[i] = rand.Float64()
+	}
+	return x
+}
+
+func ExampleScale64() {
+	x := random64(123)
+	scale := rand.Float64()
+	expected := make([]float64, 123)
+	actual := make([]float64, 123)
+	for i := range x {
+		expected[i] = x[i] * scale
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(scale float64, x []float64)
+	}{
+		{"Scale", f64.Scale},
+	} {
+		copy(actual, x)
+		o.Func(scale, actual)
+		for i := range x {
+			if f64.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
 	// Output:
-	// 8
+}
+
+func ExampleAdd64() {
+	x := random64(123)
+	y := random64(123)
+	expected := make([]float64, 123)
+	actual := make([]float64, 123)
+	for i := range x {
+		expected[i] = x[i] + y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(x, y []float64)
+	}{
+		{"Add", f64.Add},
+	} {
+		copy(actual, x)
+		o.Func(actual, y)
+		for i := range x {
+			if f64.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
+	// Output:
+}
+
+func ExampleMul64() {
+	x := random64(123)
+	y := random64(123)
+	expected := make([]float64, 123)
+	actual := make([]float64, 123)
+	for i := range x {
+		expected[i] = x[i] * y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(x, y []float64)
+	}{
+		{"Add", f64.Mul},
+	} {
+		copy(actual, x)
+		o.Func(actual, y)
+		for i := range x {
+			if f64.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
+	// Output:
+}
+
+func ExampleAddTo64() {
+	x := random64(123)
+	y := random64(123)
+	expected := make([]float64, 123)
+	actual := make([]float64, 123)
+	for i := range x {
+		expected[i] = x[i] + y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(dst, x, y []float64)
+	}{
+		{"vanilla", f64.vanillaAddTo},
+		{"unrolled", f64.unrolledAddTo},
+		{"avx", f64.AddTo},
+	} {
+
+		o.Func(actual, x, y)
+		for i := range x {
+			if f64.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+
+	// Output:
+}
+
+func ExampleSubTo64() {
+	x := random64(123)
+	y := random64(123)
+	expected := make([]float64, 123)
+	actual := make([]float64, 123)
+	for i := range x {
+		expected[i] = x[i] - y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(dst, x, y []float64)
+	}{
+		{"vanilla", f64.vanillaSubTo},
+		{"unrolled", f64.unrolledSubTo},
+		{"avx", f64.SubTo},
+	} {
+
+		o.Func(actual, x, y)
+		for i := range x {
+			if f64.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+	// Output:
+}
+
+func ExampleMulTo64() {
+	x := random64(123)
+	y := random64(123)
+	expected := make([]float64, 123)
+	actual := make([]float64, 123)
+	for i := range x {
+		expected[i] = x[i] * y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(dst, x, y []float64)
+	}{
+		{"vanilla", f64.vanillaMulTo},
+		{"unrolled", f64.unrolledMulTo},
+		{"avx", f64.MulTo},
+	} {
+
+		o.Func(actual, x, y)
+		for i := range x {
+			if f64.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+	// Output:
+}
+
+func ExampleScaleTo64() {
+	x := random64(123)
+	scale := rand.Float64()
+	expected := make([]float64, 123)
+	actual := make([]float64, 123)
+	for i := range x {
+		expected[i] = x[i] * scale
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(dst, x []float64, scale float64)
+	}{
+		{"vanilla", f64.vanillaScaleTo},
+		{"unrolled", f64.unrolledScaleTo},
+		{"avx", f64.ScaleTo},
+	} {
+
+		o.Func(actual, x, scale)
+		for i := range x {
+			if f64.Abs(actual[i]-expected[i]) > .001 {
+				fmt.Printf("%s Expected[%d] %g actual %g\n", o.Name, i, expected[i], actual[i])
+			}
+		}
+	}
+	// Output:
+}
+
+func ExampleSum64() {
+	x := random64(123)
+	var expected, actual float64
+	for i := range x {
+		expected += x[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(x []float64) float64
+	}{
+		{"vanilla", f64.vanillaSum},
+		{"unrolled", f64.unrolledSum},
+		{"avx", f64.Sum},
+	} {
+
+		actual = o.Func(x)
+		if f64.Abs(actual-expected) > .001 {
+			fmt.Printf("%s Expected %g actual %g\n", o.Name, expected, actual)
+		}
+
+	}
+	// Output:
+}
+
+func ExampleDot64() {
+
+	x, y := random64(123), random64(123)
+	var expected, actual float64
+	for i := range x {
+		expected += x[i] * y[i]
+	}
+	for _, o := range []struct {
+		Name string
+		Func func(x, y []float64) float64
+	}{
+		{"vanilla", f64.vanillaDot},
+		{"unrolled", f64.unrolledDot},
+		{"avx", f64.Dot},
+	} {
+
+		actual = o.Func(x, y)
+		if f64.Abs(actual-expected) > .001 {
+			fmt.Printf("%s Expected %g actual %g\n", o.Name, expected, actual)
+		}
+
+	}
+	// Output:
 }
 
 func ExampleMean64() {
@@ -170,6 +685,26 @@ func ExampleMin64() {
 	// 1
 }
 
+func ExampleAlloc64() {
+	var a, b F64s
+	f64.Alloc(8760, &a, &b)
+	if a == nil || b == nil || len(a) != len(b) {
+		fmt.Println("unexpected")
+	}
+	//Output:
+}
+func ExampleEqualWithinAbs64() {
+	var expected, actual bool
+	expected, actual = true, f64.EqualWithinAbs(1, 1.1, .101)
+	if expected != actual {
+		fmt.Printf("expected %v actual %v\n", expected, actual)
+	}
+	expected, actual = false, f64.EqualWithinAbs(1, 1.1, .099)
+	if expected != actual {
+		fmt.Printf("expected %v actual %v\n", expected, actual)
+	}
+	// Output:
+}
 func BenchmarkSum64(b *testing.B) {
 	a := make([]float64, 8760)
 
@@ -178,6 +713,7 @@ func BenchmarkSum64(b *testing.B) {
 		Func func([]float64) float64
 	}{
 		{"vanillaSum", f64.vanillaSum},
+		{"unrolledSum", f64.unrolledSum},
 		{"Sum", f64.Sum},
 	} {
 		b.Run(f.Name, func(b *testing.B) {
@@ -189,18 +725,23 @@ func BenchmarkSum64(b *testing.B) {
 }
 
 func BenchmarkDot64(b *testing.B) {
-	a := make([]float64, 8760)
-	for _, f := range []struct {
-		Name string
-		Func func(x, y []float64) float64
-	}{
-		{"vanillaDot", f64.vanillaDot},
-		{"Dot", f64.Dot},
-	} {
-		b.Run(f.Name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				f.Func(a, a)
-			}
-		})
+	a := make([]float64, 81818)
+	for _, l := range []int{818, 8181, 81818} {
+		for _, f := range []struct {
+			Name string
+			Func func(x, y []float64) float64
+		}{
+			{fmt.Sprintf("vanillaDot/%d", l), f64.vanillaDot},
+			{fmt.Sprintf("unrolledDot/%d", l), f64.unrolledDot},
+			{fmt.Sprintf("blas64.Dot/%d", l), blas64Dot},
+			{fmt.Sprintf("avx64.Dot/%d", l), (avx.F64{}).Dot},
+			{fmt.Sprintf("asm_avx64.Dot/%d", l), avxFloat64Dot},
+		} {
+			b.Run(f.Name, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					f.Func(a[:l], a[:l])
+				}
+			})
+		}
 	}
 }

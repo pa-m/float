@@ -3,6 +3,7 @@
 package float
 
 import (
+	"fmt"
 	math64 "math"
 
 	math32 "github.com/chewxy/math32"
@@ -17,7 +18,7 @@ func ExamplePowellMinimizer32() {
 	//pm.Callback = func(x []float32) { fmt.Printf("%.5g\n", x) }
 	//pm.Logger = log.New(os.Stdout, "", 0)
 
-	print(pm.Minimize(
+	fmt.Printf("%.3f\n", pm.Minimize(
 		func(x []float32) float32 { return math32.Log(square(x[0]-2) + square(x[1]-3) + 4) },
 		[]float32{10, 20},
 	))
@@ -26,6 +27,8 @@ func ExamplePowellMinimizer32() {
 	// [1.9998 3.0111]
 	// [1.9949 3.0034]
 
+	// Output:
+	// [1.995 3.003]
 }
 
 func ExamplePowellMinimizer64() {
@@ -37,7 +40,7 @@ func ExamplePowellMinimizer64() {
 	//pm.Callback = func(x []float64) { fmt.Printf("%.5g\n", x) }
 	//pm.Logger = log.New(os.Stdout, "", 0)
 
-	print(pm.Minimize(
+	fmt.Printf("%.3f\n", pm.Minimize(
 		func(x []float64) float64 { return math64.Log(square(x[0]-2) + square(x[1]-3) + 4) },
 		[]float64{10, 20},
 	))
@@ -46,4 +49,6 @@ func ExamplePowellMinimizer64() {
 	// [1.9998 3.0111]
 	// [1.9949 3.0034]
 
+	// Output:
+	// [1.995 3.003]
 }

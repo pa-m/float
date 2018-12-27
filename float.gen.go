@@ -147,24 +147,18 @@ func (F32) CheckFloat(msg string, ai float32) {
 }
 
 // Scale ...
-func (F32) Scale(scale float32, a []float32) {
-	for i := range a {
-		a[i] *= scale
-	}
+func (f32 F32) Scale(scale float32, a []float32) {
+	f32.ScaleTo(a, a, scale)
 }
 
 // Add ...
-func (F32) Add(dst, a []float32) {
-	for i, v := range a {
-		dst[i] += v
-	}
+func (f32 F32) Add(dst, a []float32) {
+	f32.AddTo(dst, dst, a)
 }
 
 // Mul ...
-func (F32) Mul(dst, a []float32) {
-	for i, v := range a {
-		dst[i] *= v
-	}
+func (f32 F32) Mul(dst, a []float32) {
+	f32.MulTo(dst, dst, a)
 }
 
 // Sign ...
@@ -187,48 +181,217 @@ func (F32) Reduce(a []float32, f func(carry, item float32) float32, init float32
 // Square ...
 func (F32) Square(x float32) float32 { return x * x }
 
-// vanillaAddTo  for []float32
+// vanillaAddTo perform naive dst = a+b for []float32
 func (F32) vanillaAddTo(dst, a, b []float32) {
-	for i := range dst {
+	l := len(a)
+	b = b[:l]
+	for i := 0; i < l; i++ {
 		dst[i] = a[i] + b[i]
 	}
 }
 
-// vanillaSubTo  for []float32
+// unrolledAddTo perform dst = a+b with loop unrolling for []float32
+func (F32) unrolledAddTo(dst, a, b []float32) {
+	const groupsize = 8
+
+	l := len(a)
+	b = b[:l]
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+
+		dst[i+0] = a[i+0] + b[i+0]
+
+		dst[i+1] = a[i+1] + b[i+1]
+
+		dst[i+2] = a[i+2] + b[i+2]
+
+		dst[i+3] = a[i+3] + b[i+3]
+
+		dst[i+4] = a[i+4] + b[i+4]
+
+		dst[i+5] = a[i+5] + b[i+5]
+
+		dst[i+6] = a[i+6] + b[i+6]
+
+		dst[i+7] = a[i+7] + b[i+7]
+
+	}
+	for i = end; i < l; i++ {
+		dst[i] = a[i] + b[i]
+	}
+
+}
+
+// vanillaSubTo perform naive dst = a - b for []float32
 func (F32) vanillaSubTo(dst, a, b []float32) {
-	for i := range dst {
+	l := len(a)
+	b = b[:l]
+	for i := 0; i < l; i++ {
 		dst[i] = a[i] - b[i]
 	}
 }
 
-// vanillaMulTo  for []float32
+// unrolledSubTo perform dst = a - b with loop unrolling for []float32
+func (F32) unrolledSubTo(dst, a, b []float32) {
+	const groupsize = 8
+	l := len(a)
+	b = b[:l]
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+
+		dst[i+0] = a[i+0] - b[i+0]
+
+		dst[i+1] = a[i+1] - b[i+1]
+
+		dst[i+2] = a[i+2] - b[i+2]
+
+		dst[i+3] = a[i+3] - b[i+3]
+
+		dst[i+4] = a[i+4] - b[i+4]
+
+		dst[i+5] = a[i+5] - b[i+5]
+
+		dst[i+6] = a[i+6] - b[i+6]
+
+		dst[i+7] = a[i+7] - b[i+7]
+
+	}
+	for i = end; i < l; i++ {
+		dst[i] = a[i] - b[i]
+	}
+}
+
+// vanillaMulTo perform naive dst = a * b for []float32
 func (F32) vanillaMulTo(dst, a, b []float32) {
-	for i := range dst {
+	l := len(a)
+	b = b[:l]
+	for i := 0; i < l; i++ {
 		dst[i] = a[i] * b[i]
 	}
 }
 
-// vanillaScaleTo  for []float32
+// unrolledMulTo perform dst = a * b with loop unrolling for []float32
+func (F32) unrolledMulTo(dst, a, b []float32) {
+	const groupsize = 8
+	l := len(a)
+	b = b[:l]
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+
+		dst[i+0] = a[i+0] * b[i+0]
+
+		dst[i+1] = a[i+1] * b[i+1]
+
+		dst[i+2] = a[i+2] * b[i+2]
+
+		dst[i+3] = a[i+3] * b[i+3]
+
+		dst[i+4] = a[i+4] * b[i+4]
+
+		dst[i+5] = a[i+5] * b[i+5]
+
+		dst[i+6] = a[i+6] * b[i+6]
+
+		dst[i+7] = a[i+7] * b[i+7]
+
+	}
+	for i = end; i < l; i++ {
+		dst[i] = a[i] * b[i]
+	}
+}
+
+// vanillaScaleTo perform naive dst = a * scale for []float32
 func (F32) vanillaScaleTo(dst, a []float32, scale float32) {
-	for i := range dst {
+	l := len(a)
+	for i := 0; i < l; i++ {
+		dst[i] = a[i] * scale
+	}
+}
+
+// unrolledScaleTo perform dst = a * scale with loop unrolling for []float32
+func (F32) unrolledScaleTo(dst, a []float32, scale float32) {
+	const groupsize = 8
+	l := len(a)
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+
+		dst[i+0] = a[i+0] * scale
+
+		dst[i+1] = a[i+1] * scale
+
+		dst[i+2] = a[i+2] * scale
+
+		dst[i+3] = a[i+3] * scale
+
+		dst[i+4] = a[i+4] * scale
+
+		dst[i+5] = a[i+5] * scale
+
+		dst[i+6] = a[i+6] * scale
+
+		dst[i+7] = a[i+7] * scale
+
+	}
+	for i = end; i < l; i++ {
 		dst[i] = a[i] * scale
 	}
 }
 
 // vanillaSum for []float32
 func (F32) vanillaSum(a []float32) float32 {
-	acc := float32(0)
-	for _, v := range a {
-		acc += v
+	var acc float32
+	l := len(a)
+	for i := 0; i < l; i++ {
+		acc += a[i]
+	}
+	return acc
+}
+
+// unrolledSum for []float32
+func (F32) unrolledSum(a []float32) float32 {
+	var acc float32
+	const groupsize = 8
+
+	l := len(a)
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+		acc += +a[i+0] + a[i+1] + a[i+2] + a[i+3] + a[i+4] + a[i+5] + a[i+6] + a[i+7]
+	}
+	for i = end; i < l; i++ {
+		acc += a[i]
 	}
 	return acc
 }
 
 // vanillaDot for []float32
 func (F32) vanillaDot(a, b []float32) float32 {
-	acc := float32(0)
-	for i, v := range a {
-		acc += v * b[i]
+	var acc float32
+	l := len(a)
+	b = b[:l]
+	for i := 0; i < l; i++ {
+		acc += a[i] * b[i]
+	}
+	return acc
+}
+
+// unrolledDot for []float32
+func (F32) unrolledDot(a, b []float32) float32 {
+	var acc float32
+	const groupsize = 8
+	l := len(a)
+	b = b[:l]
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+		acc += +a[i+0]*b[i+0] + a[i+1]*b[i+1] + a[i+2]*b[i+2] + a[i+3]*b[i+3] + a[i+4]*b[i+4] + a[i+5]*b[i+5] + a[i+6]*b[i+6] + a[i+7]*b[i+7]
+	}
+	for i = end; i < l; i++ {
+		acc += a[i] * b[i]
 	}
 	return acc
 }
@@ -369,24 +532,18 @@ func (F64) CheckFloat(msg string, ai float64) {
 }
 
 // Scale ...
-func (F64) Scale(scale float64, a []float64) {
-	for i := range a {
-		a[i] *= scale
-	}
+func (f64 F64) Scale(scale float64, a []float64) {
+	f64.ScaleTo(a, a, scale)
 }
 
 // Add ...
-func (F64) Add(dst, a []float64) {
-	for i, v := range a {
-		dst[i] += v
-	}
+func (f64 F64) Add(dst, a []float64) {
+	f64.AddTo(dst, dst, a)
 }
 
 // Mul ...
-func (F64) Mul(dst, a []float64) {
-	for i, v := range a {
-		dst[i] *= v
-	}
+func (f64 F64) Mul(dst, a []float64) {
+	f64.MulTo(dst, dst, a)
 }
 
 // Sign ...
@@ -409,48 +566,185 @@ func (F64) Reduce(a []float64, f func(carry, item float64) float64, init float64
 // Square ...
 func (F64) Square(x float64) float64 { return x * x }
 
-// vanillaAddTo  for []float64
+// vanillaAddTo perform naive dst = a+b for []float64
 func (F64) vanillaAddTo(dst, a, b []float64) {
-	for i := range dst {
+	l := len(a)
+	b = b[:l]
+	for i := 0; i < l; i++ {
 		dst[i] = a[i] + b[i]
 	}
 }
 
-// vanillaSubTo  for []float64
+// unrolledAddTo perform dst = a+b with loop unrolling for []float64
+func (F64) unrolledAddTo(dst, a, b []float64) {
+	const groupsize = 4
+
+	l := len(a)
+	b = b[:l]
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+
+		dst[i+0] = a[i+0] + b[i+0]
+
+		dst[i+1] = a[i+1] + b[i+1]
+
+		dst[i+2] = a[i+2] + b[i+2]
+
+		dst[i+3] = a[i+3] + b[i+3]
+
+	}
+	for i = end; i < l; i++ {
+		dst[i] = a[i] + b[i]
+	}
+
+}
+
+// vanillaSubTo perform naive dst = a - b for []float64
 func (F64) vanillaSubTo(dst, a, b []float64) {
-	for i := range dst {
+	l := len(a)
+	b = b[:l]
+	for i := 0; i < l; i++ {
 		dst[i] = a[i] - b[i]
 	}
 }
 
-// vanillaMulTo  for []float64
+// unrolledSubTo perform dst = a - b with loop unrolling for []float64
+func (F64) unrolledSubTo(dst, a, b []float64) {
+	const groupsize = 4
+	l := len(a)
+	b = b[:l]
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+
+		dst[i+0] = a[i+0] - b[i+0]
+
+		dst[i+1] = a[i+1] - b[i+1]
+
+		dst[i+2] = a[i+2] - b[i+2]
+
+		dst[i+3] = a[i+3] - b[i+3]
+
+	}
+	for i = end; i < l; i++ {
+		dst[i] = a[i] - b[i]
+	}
+}
+
+// vanillaMulTo perform naive dst = a * b for []float64
 func (F64) vanillaMulTo(dst, a, b []float64) {
-	for i := range dst {
+	l := len(a)
+	b = b[:l]
+	for i := 0; i < l; i++ {
 		dst[i] = a[i] * b[i]
 	}
 }
 
-// vanillaScaleTo  for []float64
+// unrolledMulTo perform dst = a * b with loop unrolling for []float64
+func (F64) unrolledMulTo(dst, a, b []float64) {
+	const groupsize = 4
+	l := len(a)
+	b = b[:l]
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+
+		dst[i+0] = a[i+0] * b[i+0]
+
+		dst[i+1] = a[i+1] * b[i+1]
+
+		dst[i+2] = a[i+2] * b[i+2]
+
+		dst[i+3] = a[i+3] * b[i+3]
+
+	}
+	for i = end; i < l; i++ {
+		dst[i] = a[i] * b[i]
+	}
+}
+
+// vanillaScaleTo perform naive dst = a * scale for []float64
 func (F64) vanillaScaleTo(dst, a []float64, scale float64) {
-	for i := range dst {
+	l := len(a)
+	for i := 0; i < l; i++ {
+		dst[i] = a[i] * scale
+	}
+}
+
+// unrolledScaleTo perform dst = a * scale with loop unrolling for []float64
+func (F64) unrolledScaleTo(dst, a []float64, scale float64) {
+	const groupsize = 4
+	l := len(a)
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+
+		dst[i+0] = a[i+0] * scale
+
+		dst[i+1] = a[i+1] * scale
+
+		dst[i+2] = a[i+2] * scale
+
+		dst[i+3] = a[i+3] * scale
+
+	}
+	for i = end; i < l; i++ {
 		dst[i] = a[i] * scale
 	}
 }
 
 // vanillaSum for []float64
 func (F64) vanillaSum(a []float64) float64 {
-	acc := float64(0)
-	for _, v := range a {
-		acc += v
+	var acc float64
+	l := len(a)
+	for i := 0; i < l; i++ {
+		acc += a[i]
+	}
+	return acc
+}
+
+// unrolledSum for []float64
+func (F64) unrolledSum(a []float64) float64 {
+	var acc float64
+	const groupsize = 4
+
+	l := len(a)
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+		acc += +a[i+0] + a[i+1] + a[i+2] + a[i+3]
+	}
+	for i = end; i < l; i++ {
+		acc += a[i]
 	}
 	return acc
 }
 
 // vanillaDot for []float64
 func (F64) vanillaDot(a, b []float64) float64 {
-	acc := float64(0)
-	for i, v := range a {
-		acc += v * b[i]
+	var acc float64
+	l := len(a)
+	b = b[:l]
+	for i := 0; i < l; i++ {
+		acc += a[i] * b[i]
+	}
+	return acc
+}
+
+// unrolledDot for []float64
+func (F64) unrolledDot(a, b []float64) float64 {
+	var acc float64
+	const groupsize = 4
+	l := len(a)
+	b = b[:l]
+	end := (l / groupsize) * groupsize
+	var i int
+	for i = 0; i < end; i += groupsize {
+		acc += +a[i+0]*b[i+0] + a[i+1]*b[i+1] + a[i+2]*b[i+2] + a[i+3]*b[i+3]
+	}
+	for i = end; i < l; i++ {
+		acc += a[i] * b[i]
 	}
 	return acc
 }
