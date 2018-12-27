@@ -8,11 +8,18 @@ import (
 	"testing"
 
 	"./avx"
+	"golang.org/x/sys/cpu"
+
 	"gonum.org/v1/gonum/blas/blas32"
 
 	"gonum.org/v1/gonum/blas/blas64"
 )
 
+func TestCPU(t *testing.T) {
+	fmt.Println("cpu.X86.HasAVX2", cpu.X86.HasAVX2)
+	fmt.Println("cpu.X86.HasFMA", cpu.X86.HasFMA)
+	// Output:
+}
 func blas32Dot(x, y []float32) float32 {
 	return blas32.Dot(len(x), blas32.Vector{1, x}, blas32.Vector{1, y})
 }
@@ -383,6 +390,27 @@ func BenchmarkDot32(b *testing.B) {
 	}
 }
 
+func BenchmarkAddTo32(b *testing.B) {
+	a := make([]float32, 81818)
+	for _, l := range []int{818, 8181, 81818} {
+		for _, f := range []struct {
+			Name string
+			Func func(dst, x, y []float32)
+		}{
+			{fmt.Sprintf("vanillaAddTo/%d", l), f32.vanillaAddTo},
+			{fmt.Sprintf("unrolledAddTo/%d", l), f32.unrolledAddTo},
+			{fmt.Sprintf("avx32.AddTo/%d", l), (avx.F32{}).AddTo},
+			//{fmt.Sprintf("asm_avx32.AddTo/%d",l), avxFloat32AddTo},
+		} {
+			b.Run(f.Name, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					f.Func(a[:l], a[:l], a[:l])
+				}
+			})
+		}
+	}
+}
+
 func ExampleSign64() {
 	fmt.Println(f64.Sign(-.1), f64.Sign(0), f64.Sign(.1))
 	// Output:
@@ -740,6 +768,27 @@ func BenchmarkDot64(b *testing.B) {
 			b.Run(f.Name, func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					f.Func(a[:l], a[:l])
+				}
+			})
+		}
+	}
+}
+
+func BenchmarkAddTo64(b *testing.B) {
+	a := make([]float64, 81818)
+	for _, l := range []int{818, 8181, 81818} {
+		for _, f := range []struct {
+			Name string
+			Func func(dst, x, y []float64)
+		}{
+			{fmt.Sprintf("vanillaAddTo/%d", l), f64.vanillaAddTo},
+			{fmt.Sprintf("unrolledAddTo/%d", l), f64.unrolledAddTo},
+			{fmt.Sprintf("avx64.AddTo/%d", l), (avx.F64{}).AddTo},
+			//{fmt.Sprintf("asm_avx64.AddTo/%d",l), avxFloat64AddTo},
+		} {
+			b.Run(f.Name, func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					f.Func(a[:l], a[:l], a[:l])
 				}
 			})
 		}

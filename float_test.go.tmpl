@@ -3,17 +3,23 @@ package float
 import (
 	"fmt"
 	"testing"
+	"golang.org/x/sys/cpu"
 	{{range .In.floatTypes}}
 	"gonum.org/v1/gonum/blas/blas{{.bits}}"
 	{{end}}
 )
 
-	func blas32Dot(x,y []float32) float32{
-		return blas32.Dot(len(x),blas32.Vector{1,x},blas32.Vector{1,y})
-	}
-	func blas64Dot(x,y []float64) float64{
-		return blas64.Dot(blas64.Vector{len(x),1,x},blas64.Vector{len(y),1,y})
-	}
+func TestCPU(t*testing.T) {
+	fmt.Println("cpu.X86.HasAVX2",cpu.X86.HasAVX2)
+	fmt.Println("cpu.X86.HasFMA",cpu.X86.HasFMA)
+	// Output:
+}
+func blas32Dot(x,y []float32) float32{
+	return blas32.Dot(len(x),blas32.Vector{1,x},blas32.Vector{1,y})
+}
+func blas64Dot(x,y []float64) float64{
+	return blas64.Dot(blas64.Vector{len(x),1,x},blas64.Vector{len(y),1,y})
+}
 
 {{range .In.floatTypes}}
 func ExampleSign{{.bits}}() {
@@ -346,4 +352,26 @@ func BenchmarkDot{{.bits}}(b *testing.B) {
 			}
 	}
 }
+
+func BenchmarkAddTo{{.bits}}(b *testing.B){
+	a := make([]float{{.bits}}, 81818)
+	for _,l:=range []int{818,8181,81818} {
+			for _, f := range []struct {
+				Name string
+				Func func(dst,x,y []float{{.bits}}) 
+			}{
+				{fmt.Sprintf("vanillaAddTo/%d", l), f{{.bits}}.vanillaAddTo},
+				{fmt.Sprintf("unrolledAddTo/%d", l), f{{.bits}}.unrolledAddTo},
+				{fmt.Sprintf("avx{{.bits}}.AddTo/%d",l), (avx.F{{.bits}}{}).AddTo},
+				//{fmt.Sprintf("asm_avx{{.bits}}.AddTo/%d",l), avxFloat{{.bits}}AddTo},
+			} {
+				b.Run(f.Name, func(b *testing.B) {
+					for i := 0; i < b.N; i++ {
+						f.Func(a[:l],a[:l],a[:l])
+					}
+				})
+			}
+	}
+}
+
 {{end}}
