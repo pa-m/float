@@ -5,7 +5,7 @@
 package float
 
 import (
-	"./avx"
+	"github.com/pa-m/float/avx"
 	"golang.org/x/sys/cpu"
 )
 
@@ -61,9 +61,8 @@ func (f32 F32) ScaleTo(dst, a []float32, scale float32) {
 
 // Sum for []float32
 func (f32 F32) Sum(a []float32) float32 {
-	l := len(a)
-	if cpu.X86.HasAVX2 && l > lenCgoAvx2Faster {
-		return (avx.F32{}).Sum(a)
+	if cpu.X86.HasAVX2 {
+		return avxFloat32Sum(a)
 	} else {
 		return f32.unrolledSum(a)
 	}
@@ -73,8 +72,7 @@ func (f32 F32) Sum(a []float32) float32 {
 func (f32 F32) Dot(a, b []float32) float32 {
 	l := len(a)
 	b = b[:l]
-	if cpu.X86.HasAVX2 && cpu.X86.HasFMA && l > lenCgoAvx2Faster {
-		//return avx_float32_dot(a,b)
+	if cpu.X86.HasAVX2 && cpu.X86.HasFMA {
 		return avxFloat32Dot(a, b)
 	} else {
 		return f32.unrolledDot(a, b)
@@ -131,9 +129,8 @@ func (f64 F64) ScaleTo(dst, a []float64, scale float64) {
 
 // Sum for []float64
 func (f64 F64) Sum(a []float64) float64 {
-	l := len(a)
-	if cpu.X86.HasAVX2 && l > lenCgoAvx2Faster {
-		return (avx.F64{}).Sum(a)
+	if cpu.X86.HasAVX2 {
+		return avxFloat64Sum(a)
 	} else {
 		return f64.unrolledSum(a)
 	}
@@ -143,8 +140,7 @@ func (f64 F64) Sum(a []float64) float64 {
 func (f64 F64) Dot(a, b []float64) float64 {
 	l := len(a)
 	b = b[:l]
-	if cpu.X86.HasAVX2 && cpu.X86.HasFMA && l > lenCgoAvx2Faster {
-		//return avx_float64_dot(a,b)
+	if cpu.X86.HasAVX2 && cpu.X86.HasFMA {
 		return avxFloat64Dot(a, b)
 	} else {
 		return f64.unrolledDot(a, b)

@@ -27,6 +27,24 @@ func avxFloat64Dot(x, y []float64) (res float64) {
 	return
 }
 
+//go:noescape
+func _avxFloat32Sum(n int, x, res unsafe.Pointer)
+
+func avxFloat32Sum(x []float32) (res float32) {
+	n := len(x)
+	_avxFloat32Sum(n, unsafe.Pointer(&x[0]), unsafe.Pointer(&res))
+	return
+}
+
+//go:noescape
+func _avxFloat64Sum(n int, x, res unsafe.Pointer)
+
+func avxFloat64Sum(x []float64) (res float64) {
+	n := len(x)
+	_avxFloat64Sum(n, unsafe.Pointer(&x[0]), unsafe.Pointer(&res))
+	return
+}
+
 /*
 //go:noescape
 func _avx_float32_addto(n int, x, y, res unsafe.Pointer)

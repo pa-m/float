@@ -20,6 +20,17 @@ func (F32) NaN() float32 { return math32.NaN() }
 
 func (F32) IsNaN(x float32) bool { return math32.IsNaN(x) }
 
+func (F32) Inf(sgn int) float32 { return math32.Inf(sgn) }
+
+func (F32) IsInf(x float32, sgn int) bool { return math32.IsInf(x, sgn) }
+
+func (F32) Iif(cond bool, a, b float32) float32 {
+	if cond {
+		return a
+	}
+	return b
+}
+
 // Len (sort.Interface)
 func (a F32s) Len() int { return len(a) }
 
@@ -404,6 +415,17 @@ var f64 F64
 func (F64) NaN() float64 { return math64.NaN() }
 
 func (F64) IsNaN(x float64) bool { return math64.IsNaN(x) }
+
+func (F64) Inf(sgn int) float64 { return math64.Inf(sgn) }
+
+func (F64) IsInf(x float64, sgn int) bool { return math64.IsInf(x, sgn) }
+
+func (F64) Iif(cond bool, a, b float64) float64 {
+	if cond {
+		return a
+	}
+	return b
+}
 
 // Len (sort.Interface)
 func (a F64s) Len() int { return len(a) }

@@ -21,6 +21,16 @@ func (F{{.bits}}) NaN() float{{.bits}} {return math{{.bits}}.NaN()}
 
 func (F{{.bits}}) IsNaN(x float{{.bits}}) bool {return math{{.bits}}.IsNaN(x)}
 
+func (F{{.bits}}) Inf(sgn int) float{{.bits}} {return math{{.bits}}.Inf(sgn)}
+
+func (F{{.bits}}) IsInf(x float{{.bits}},sgn int) bool {return math{{.bits}}.IsInf(x,sgn)}
+
+func (F{{.bits}}) Iif(cond bool, a,b float{{.bits}}) float{{.bits}} {
+	if cond {
+		return a
+	}
+	return b
+}
 
 // Len (sort.Interface)
 func (a F{{.bits}}s) Len() int { return len(a) }

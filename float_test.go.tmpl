@@ -2,6 +2,7 @@ package float
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"golang.org/x/sys/cpu"
 	{{range .In.floatTypes}}
@@ -17,8 +18,8 @@ func TestCPU(t*testing.T) {
 func blas32Dot(x,y []float32) float32{
 	return blas32.Dot(len(x),blas32.Vector{1,x},blas32.Vector{1,y})
 }
-func blas64Dot(x,y []float64) float64{
-	return blas64.Dot(blas64.Vector{len(x),1,x},blas64.Vector{len(y),1,y})
+func blas64Dot(x, y []float64) float64 {
+	return blas64.Dot(blas64.Vector{N:len(x), Inc:1, Data:x}, blas64.Vector{N:len(y), Inc:1, Data:y})
 }
 
 {{range .In.floatTypes}}
@@ -237,7 +238,7 @@ func ExampleSum{{.bits}}() {
 	for _,o:=range []struct{Name string;Func func(x []float{{.bits}})float{{.bits}}}{
 		{"vanilla",f{{.bits}}.vanillaSum},
 		{"unrolled",f{{.bits}}.unrolledSum},
-		{"avx",f{{.bits}}.Sum},
+		{"f{{.bits}}.Sum",f{{.bits}}.Sum},
 	}{
 
 		actual=o.Func(x)
@@ -312,44 +313,51 @@ func ExampleEqualWithinAbs{{.bits}}() {
 	// Output:	
 }
 func BenchmarkSum{{.bits}}(b *testing.B) {
-	a := make([]float{{.bits}}, 8760)
-	
-	for _, f := range []struct {
-		Name string
-		Func func([]float{{.bits}}) float{{.bits}}
-	}{
-		{"vanillaSum", f{{.bits}}.vanillaSum},
-		{"unrolledSum", f{{.bits}}.unrolledSum},
-		{"Sum", f{{.bits}}.Sum},
-	} {
-		b.Run(f.Name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				f.Func(a)
-			}
-		})
+	a := make([]float{{.bits}}, 87600)
+
+	for _,size:=range []int {8760,87600}{
+        for _, f := range []struct {
+            Name string
+            Func func([]float{{.bits}}) float{{.bits}}
+        }{
+            {"vanillaSum", f{{.bits}}.vanillaSum},
+            {"unrolledSum", f{{.bits}}.unrolledSum},
+            {"cgoSum", avx.F{{.bits}}{}.Sum},
+            {"avxFloat{{.bits}}Sum", avxFloat{{.bits}}Sum},
+            {"f{{.bits}}.Sum", f{{.bits}}.Sum},
+        } {
+            b.Run(fmt.Sprintf("%s/%d", f.Name, size), func(b *testing.B) {
+                for i := 0; i < b.N; i++ {
+                    f.Func(a[:size])
+                }
+            })
+        }
 	}
 }
 
 
 func BenchmarkDot{{.bits}}(b *testing.B) {
+
 	a := make([]float{{.bits}}, 81818)
 	for _,l:=range []int{818,8181,81818}{
-			for _, f := range []struct {
-				Name string
-				Func func(x,y []float{{.bits}}) float{{.bits}}
-			}{
-				{fmt.Sprintf("vanillaDot/%d",l), f{{.bits}}.vanillaDot},
-				{fmt.Sprintf("unrolledDot/%d",l), f{{.bits}}.unrolledDot},
-				{fmt.Sprintf("blas{{.bits}}.Dot/%d",l),blas{{.bits}}Dot},
-				{fmt.Sprintf("avx{{.bits}}.Dot/%d",l), (avx.F{{.bits}}{}).Dot},
-				{fmt.Sprintf("asm_avx{{.bits}}.Dot/%d",l), avxFloat{{.bits}}Dot},
-			} {
-				b.Run(f.Name, func(b *testing.B) {
-					for i := 0; i < b.N; i++ {
-						f.Func(a[:l],a[:l])
-					}
-				})
-			}
+
+	    tests:=[]struct {
+                        Name string
+                        Func func(x,y []float{{.bits}}) float{{.bits}}
+        } {
+            {fmt.Sprintf("vanillaDot/%d",l), f{{.bits}}.vanillaDot},
+            {fmt.Sprintf("unrolledDot/%d",l), f{{.bits}}.unrolledDot},
+            {fmt.Sprintf("blas{{.bits}}.Dot/%d",l),blas{{.bits}}Dot},
+            {fmt.Sprintf("avx{{.bits}}.Dot(cgo)/%d",l), (avx.F{{.bits}}{}).Dot},
+            {fmt.Sprintf("avxFloat{{.bits}}Dot(avx.c,c2goasm)/%d",l), avxFloat{{.bits}}Dot},
+        }
+        for _, f := range tests {
+            b.Run(f.Name, func(b *testing.B) {
+                for i := 0; i < b.N; i++ {
+                    f.Func(a[:l],a[:l])
+                }
+            })
+        }
 	}
 }
 

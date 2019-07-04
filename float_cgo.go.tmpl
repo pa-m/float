@@ -5,7 +5,7 @@ import(
     "fmt"
     "sort"
 	"golang.org/x/sys/cpu"
-	"./avx"
+	"github.com/pa-m/float/avx"
 {{range .In.floatTypes}}
     math{{.bits}} "{{.mathmodurl}}"
 {{end}}
@@ -62,20 +62,18 @@ func (f{{.bits}} F{{.bits}}) ScaleTo(dst,a []float{{.bits}},scale float{{.bits}}
 
 // Sum for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) Sum(a []float{{.bits}}) float{{.bits}} {
-			l:=len(a)
-			if cpu.X86.HasAVX2 && l>lenCgoAvx2Faster {
-				return (avx.F{{.bits}}{}).Sum(a)
-			}else{
-				return f{{.bits}}.unrolledSum(a)
-			}
+	if cpu.X86.HasAVX2 {
+		return avxFloat{{.bits}}Sum(a)
+	}else{
+		return f{{.bits}}.unrolledSum(a)
+	}
 }
 
 // Dot for []float{{.bits}}
 func (f{{.bits}} F{{.bits}}) Dot(a,b []float{{.bits}}) float{{.bits}} {
     l:=len(a)
 	b=b[:l]
-	if cpu.X86.HasAVX2 && cpu.X86.HasFMA && l>lenCgoAvx2Faster {
-		//return avx_float{{.bits}}_dot(a,b)
+	if cpu.X86.HasAVX2 && cpu.X86.HasFMA  {
 		return avxFloat{{.bits}}Dot(a,b)
 	}else{
 		return f{{.bits}}.unrolledDot(a,b)

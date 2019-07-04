@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"./avx"
+	"github.com/pa-m/float/avx"
 	"golang.org/x/sys/cpu"
 
 	"gonum.org/v1/gonum/blas/blas32"
@@ -24,7 +24,7 @@ func blas32Dot(x, y []float32) float32 {
 	return blas32.Dot(len(x), blas32.Vector{1, x}, blas32.Vector{1, y})
 }
 func blas64Dot(x, y []float64) float64 {
-	return blas64.Dot(blas64.Vector{len(x), 1, x}, blas64.Vector{len(y), 1, y})
+	return blas64.Dot(blas64.Vector{N: len(x), Inc: 1, Data: x}, blas64.Vector{N: len(y), Inc: 1, Data: y})
 }
 
 func ExampleSign32() {
@@ -266,7 +266,7 @@ func ExampleSum32() {
 	}{
 		{"vanilla", f32.vanillaSum},
 		{"unrolled", f32.unrolledSum},
-		{"avx", f32.Sum},
+		{"f32.Sum", f32.Sum},
 	} {
 
 		actual = o.Func(x)
@@ -350,37 +350,44 @@ func ExampleEqualWithinAbs32() {
 	// Output:
 }
 func BenchmarkSum32(b *testing.B) {
-	a := make([]float32, 8760)
+	a := make([]float32, 87600)
 
-	for _, f := range []struct {
-		Name string
-		Func func([]float32) float32
-	}{
-		{"vanillaSum", f32.vanillaSum},
-		{"unrolledSum", f32.unrolledSum},
-		{"Sum", f32.Sum},
-	} {
-		b.Run(f.Name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				f.Func(a)
-			}
-		})
+	for _, size := range []int{8760, 87600} {
+		for _, f := range []struct {
+			Name string
+			Func func([]float32) float32
+		}{
+			{"vanillaSum", f32.vanillaSum},
+			{"unrolledSum", f32.unrolledSum},
+			{"cgoSum", avx.F32{}.Sum},
+			{"avxFloat32Sum", avxFloat32Sum},
+			{"f32.Sum", f32.Sum},
+		} {
+			b.Run(fmt.Sprintf("%s/%d", f.Name, size), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					f.Func(a[:size])
+				}
+			})
+		}
 	}
 }
 
 func BenchmarkDot32(b *testing.B) {
+
 	a := make([]float32, 81818)
 	for _, l := range []int{818, 8181, 81818} {
-		for _, f := range []struct {
+
+		tests := []struct {
 			Name string
 			Func func(x, y []float32) float32
 		}{
 			{fmt.Sprintf("vanillaDot/%d", l), f32.vanillaDot},
 			{fmt.Sprintf("unrolledDot/%d", l), f32.unrolledDot},
 			{fmt.Sprintf("blas32.Dot/%d", l), blas32Dot},
-			{fmt.Sprintf("avx32.Dot/%d", l), (avx.F32{}).Dot},
-			{fmt.Sprintf("asm_avx32.Dot/%d", l), avxFloat32Dot},
-		} {
+			{fmt.Sprintf("avx32.Dot(cgo)/%d", l), (avx.F32{}).Dot},
+			{fmt.Sprintf("avxFloat32Dot(avx.c,c2goasm)/%d", l), avxFloat32Dot},
+		}
+		for _, f := range tests {
 			b.Run(f.Name, func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					f.Func(a[:l], a[:l])
@@ -650,7 +657,7 @@ func ExampleSum64() {
 	}{
 		{"vanilla", f64.vanillaSum},
 		{"unrolled", f64.unrolledSum},
-		{"avx", f64.Sum},
+		{"f64.Sum", f64.Sum},
 	} {
 
 		actual = o.Func(x)
@@ -734,37 +741,44 @@ func ExampleEqualWithinAbs64() {
 	// Output:
 }
 func BenchmarkSum64(b *testing.B) {
-	a := make([]float64, 8760)
+	a := make([]float64, 87600)
 
-	for _, f := range []struct {
-		Name string
-		Func func([]float64) float64
-	}{
-		{"vanillaSum", f64.vanillaSum},
-		{"unrolledSum", f64.unrolledSum},
-		{"Sum", f64.Sum},
-	} {
-		b.Run(f.Name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				f.Func(a)
-			}
-		})
+	for _, size := range []int{8760, 87600} {
+		for _, f := range []struct {
+			Name string
+			Func func([]float64) float64
+		}{
+			{"vanillaSum", f64.vanillaSum},
+			{"unrolledSum", f64.unrolledSum},
+			{"cgoSum", avx.F64{}.Sum},
+			{"avxFloat64Sum", avxFloat64Sum},
+			{"f64.Sum", f64.Sum},
+		} {
+			b.Run(fmt.Sprintf("%s/%d", f.Name, size), func(b *testing.B) {
+				for i := 0; i < b.N; i++ {
+					f.Func(a[:size])
+				}
+			})
+		}
 	}
 }
 
 func BenchmarkDot64(b *testing.B) {
+
 	a := make([]float64, 81818)
 	for _, l := range []int{818, 8181, 81818} {
-		for _, f := range []struct {
+
+		tests := []struct {
 			Name string
 			Func func(x, y []float64) float64
 		}{
 			{fmt.Sprintf("vanillaDot/%d", l), f64.vanillaDot},
 			{fmt.Sprintf("unrolledDot/%d", l), f64.unrolledDot},
 			{fmt.Sprintf("blas64.Dot/%d", l), blas64Dot},
-			{fmt.Sprintf("avx64.Dot/%d", l), (avx.F64{}).Dot},
-			{fmt.Sprintf("asm_avx64.Dot/%d", l), avxFloat64Dot},
-		} {
+			{fmt.Sprintf("avx64.Dot(cgo)/%d", l), (avx.F64{}).Dot},
+			{fmt.Sprintf("avxFloat64Dot(avx.c,c2goasm)/%d", l), avxFloat64Dot},
+		}
+		for _, f := range tests {
 			b.Run(f.Name, func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
 					f.Func(a[:l], a[:l])

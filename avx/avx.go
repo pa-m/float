@@ -200,7 +200,7 @@ type F32 struct{}
 type F64 struct{}
 
 func (F32) Sum(a []float32) float32 {
-	return float32(C.avx_float32_sum(C.ulong(len(a)), (*C.float)(&a[0])))
+	return float32(C.avx_float32_sum(C.size_t(len(a)), (*C.float)(&a[0])))
 }
 
 func (F32) Dot(x, y []float32) float32 {
@@ -224,7 +224,7 @@ func (F32) ScaleTo(dst, x []float32, scale float32) {
 }
 
 func (F64) Sum(a []float64) float64 {
-	return float64(C.avx_float64_sum(C.ulong(len(a)), (*C.double)(&a[0])))
+	return float64(C.avx_float64_sum(C.size_t(len(a)), (*C.double)(&a[0])))
 }
 
 func (F64) Dot(x, y []float64) float64 {
